@@ -1,0 +1,213 @@
+<!-- Mobile Status Bar Component - 2-line layout with hamburger menu -->
+<!-- Usage: <ftui-statusbar-mobile></ftui-statusbar-mobile> -->
+
+<style>
+:root {
+  --statusbar-bg: #0a0e18;
+  --statusbar-line: #1d2638;
+  --statusbar-txt: #e0e0e0;
+  --statusbar-dim: #8496ab;
+  --pv-color: #ffb300;
+  --haus-color: #2196f3;
+  --bat-color: #4caf50;
+  --grid-color: #e05252;
+  --einspeise-color: #10b981;
+  --wb-color: #a78bfa;
+}
+
+.statusbar-mobile {
+  display: flex;
+  gap: 0;
+  height: auto;
+  background: var(--statusbar-bg);
+  border-bottom: 1px solid var(--statusbar-line);
+  padding: 8px 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.statusbar-mobile__menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  background: var(--statusbar-bg);
+  border-right: 1px solid var(--statusbar-line);
+  cursor: pointer;
+  font-size: 24px;
+  color: var(--statusbar-txt);
+  min-height: 60px;
+  flex-shrink: 0;
+}
+
+.statusbar-mobile__menu:hover {
+  background: #0f1522;
+}
+
+.statusbar-mobile__content {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0;
+  align-items: center;
+  padding: 4px 12px;
+}
+
+.statusbar-mobile__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  font-size: 12px;
+  border-right: 1px solid var(--statusbar-line);
+}
+
+.statusbar-mobile__item:last-child {
+  border-right: none;
+}
+
+.statusbar-mobile__label {
+  color: var(--statusbar-dim);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.statusbar-mobile__value {
+  color: var(--statusbar-txt);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.statusbar-mobile__unit {
+  color: var(--statusbar-dim);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.statusbar-mobile__item--pv .statusbar-mobile__value {
+  color: var(--pv-color);
+}
+
+.statusbar-mobile__item--haus .statusbar-mobile__value {
+  color: var(--haus-color);
+}
+
+.statusbar-mobile__item--bat .statusbar-mobile__value {
+  color: var(--bat-color);
+}
+
+.statusbar-mobile__item--grid .statusbar-mobile__value {
+  color: var(--grid-color);
+}
+
+.statusbar-mobile__item--einspeise .statusbar-mobile__value {
+  color: var(--einspeise-color);
+}
+
+.statusbar-mobile__item--wb .statusbar-mobile__value {
+  color: var(--wb-color);
+}
+
+@media (max-width: 600px) {
+  .statusbar-mobile__content {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .statusbar-mobile__item {
+    font-size: 11px;
+    padding: 4px 6px;
+  }
+  
+  .statusbar-mobile__value {
+    font-size: 13px;
+  }
+}
+
+.statusbar-mobile__link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.statusbar-mobile__link:hover {
+  opacity: 0.8;
+}
+
+.statusbar-mobile__link:active {
+  opacity: 0.6;
+}
+</style>
+
+<div class="statusbar-mobile">
+  <button class="statusbar-mobile__menu" id="statusbar-burger" title="Menu öffnen">☰</button>
+  <div class="statusbar-mobile__content">
+    <div class="statusbar-mobile__item statusbar-mobile__item--pv">
+      <span class="statusbar-mobile__label">🔆 PV</span>
+      <span class="statusbar-mobile__value" id="sb-pv-value">0<span class="statusbar-mobile__unit">W</span></span>
+    </div>
+    
+    <div class="statusbar-mobile__item statusbar-mobile__item--haus">
+      <span class="statusbar-mobile__label">🏠 Haus</span>
+      <span class="statusbar-mobile__value" id="sb-haus-value">0<span class="statusbar-mobile__unit">W</span></span>
+    </div>
+    
+    <div class="statusbar-mobile__item statusbar-mobile__item--bat">
+      <span class="statusbar-mobile__label">🔋 Speicher</span>
+      <span class="statusbar-mobile__value" id="sb-bat-value">0<span class="statusbar-mobile__unit">%</span></span>
+    </div>
+    
+    <div class="statusbar-mobile__item statusbar-mobile__item--einspeise">
+      <span class="statusbar-mobile__label">🔌 Netz</span>
+      <span class="statusbar-mobile__value" id="sb-grid-value">0<span class="statusbar-mobile__unit">W</span></span>
+    </div>
+    
+    <div class="statusbar-mobile__item statusbar-mobile__item--wb">
+      <span class="statusbar-mobile__label">🚗 WB-L</span>
+      <a href="eauto.html" class="statusbar-mobile__link">
+        <span class="statusbar-mobile__value" id="sb-wb-left">0<span class="statusbar-mobile__unit">kW</span></span>
+      </a>
+    </div>
+    
+    <div class="statusbar-mobile__item statusbar-mobile__item--wb">
+      <span class="statusbar-mobile__label">🚗 WB-R</span>
+      <a href="eauto.html" class="statusbar-mobile__link">
+        <span class="statusbar-mobile__value" id="sb-wb-right">0<span class="statusbar-mobile__unit">kW</span></span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('statusbar-burger')?.addEventListener('click', function() {
+  const sidenav = document.getElementById('sidenav');
+  const navshade = document.getElementById('navshade');
+  if (sidenav) sidenav.classList.toggle('open');
+  if (navshade) navshade.classList.toggle('open');
+});
+
+function updateStatusBar(data) {
+  const pvValue = data.pv || 0;
+  document.getElementById('sb-pv-value').textContent = Math.round(pvValue) + ' W';
+  
+  const hausValue = data.haus || 0;
+  document.getElementById('sb-haus-value').textContent = Math.round(hausValue) + ' W';
+  
+  const batValue = data.bat || 0;
+  document.getElementById('sb-bat-value').textContent = Math.round(batValue) + ' %';
+  
+  const gridValue = data.grid || 0;
+  const gridLabel = gridValue > 0 ? '+' : '';
+  document.getElementById('sb-grid-value').textContent = gridLabel + Math.round(gridValue) + ' W';
+  
+  const wbLeftValue = data.wb_left || 0;
+  document.getElementById('sb-wb-left').textContent = (wbLeftValue / 1000).toFixed(1) + ' kW';
+  
+  const wbRightValue = data.wb_right || 0;
+  document.getElementById('sb-wb-right').textContent = (wbRightValue / 1000).toFixed(1) + ' kW';
+}
+</script>
