@@ -1,0 +1,4 @@
+/* custom.css Inhalt */
+body { background-color: #0f1113 !important; color: #e6eef6 !important; }
+.ftui-header, .ftui-footer { background: linear-gradient(90deg,#0b1220,#16202a) !important; border-bottom: 1px solid rgba(255,255,255,0.04) !important; }
+.my-custom-widget { border-radius: 8px; padding: 8px; background: rgba(255,255,255,0.02); box-shadow: 0 1px 4px rgba(0,0,0,0.6); }

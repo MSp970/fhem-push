@@ -1,0 +1,2 @@
+http://fhem.de/fhemupdate/controls_fhem.txt
+https://raw.githubusercontent.com/knowthelist/fhem-ftui3/main/controls_ftui3.txt

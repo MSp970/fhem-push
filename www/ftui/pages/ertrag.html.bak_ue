@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes"/>
+<title>PV Ertrag</title>
+<script src="../ftui.js"></script>
+<link href="../ftui.css" rel="stylesheet"/>
+<link href="../themes/ftui-theme.css" rel="stylesheet"/>
+<style>
+:root{--bg:#0b0f1a;--card:#121826;--card2:#1a1f2e;--pv:#fbbf24;--cy:#22d3ee;--gr:#34d399;--rd:#f87171;--vi:#a78bfa;--dim:#94a3b8;--tx:#e5e7eb}
+html,body{background:var(--bg);color:var(--tx);margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.navshade{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:.2s;z-index:40}
+.navshade.open{opacity:1;pointer-events:auto}
+.sidenav{position:fixed;top:0;left:0;bottom:0;width:240px;background:#0e1422;transform:translateX(-100%);transition:.25s;z-index:50;padding:18px 0;box-shadow:4px 0 24px rgba(0,0,0,.5)}
+.sidenav.open{transform:none}
+.sidenav .brand{font-weight:800;letter-spacing:.2em;color:var(--cy);padding:0 20px 14px;font-size:13px}
+.sidenav a{display:block;padding:11px 20px;color:var(--tx);text-decoration:none;font-size:15px}
+.sidenav a:hover{background:rgba(34,211,238,.08)}
+.sidenav a.active{background:rgba(34,211,238,.14);border-left:3px solid var(--cy)}
+.headbar{display:flex;align-items:center;gap:18px;padding:10px 16px;background:var(--card);border-bottom:1px solid rgba(255,255,255,.06);position:sticky;top:0;z-index:30}
+.burger{background:none;border:0;color:var(--tx);font-size:22px;cursor:pointer}
+.headbar h1{font-size:17px;margin:0;font-weight:700;flex:1}
+.headbar .clock{font-variant-numeric:tabular-nums;color:var(--dim)}
+.wrap{width:94%;max-width:1400px;margin:18px auto 40px}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:linear-gradient(145deg,var(--card2),var(--card));border-radius:14px;padding:14px 16px;border:1px solid rgba(255,255,255,.05)}
+.kpi .l{font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+.kpi .v{font-size:28px;font-weight:800;margin-top:4px;white-space:nowrap}
+.kpi .v small{font-size:14px;font-weight:600;color:var(--dim);margin-left:3px}
+.site{margin-bottom:26px}
+.site h2{font-size:15px;color:var(--cy);letter-spacing:.08em;text-transform:uppercase;margin:6px 4px 10px;display:flex;align-items:center;gap:10px}
+.site h2 .st{font-size:11px;color:var(--dim);text-transform:none;letter-spacing:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.tile{background:var(--card);border-radius:14px;padding:16px 18px;border:1px solid rgba(255,255,255,.05);box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.tile h3{margin:0 0 12px;font-size:13px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.big{display:flex;align-items:baseline;gap:8px}
+.big .n{font-size:40px;font-weight:800;color:var(--pv);text-shadow:0 0 18px rgba(251,191,36,.35)}
+.big .u{color:var(--dim);font-weight:600}
+.rows{display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:14px;margin-top:10px}
+.rows .k{color:var(--dim)}
+.rows .v{font-weight:700;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pos{color:var(--gr)}.neg{color:var(--rd)}
+.am{margin-bottom:14px}
+.am .hd{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px}
+.am .hd b{font-size:15px}
+.bar{height:12px;border-radius:8px;background:#0b1220;overflow:hidden;position:relative}
+.bar i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,var(--gr),var(--cy));box-shadow:0 0 12px rgba(52,211,153,.4);transition:width .8s}
+.am .ft{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-top:5px;gap:8px;flex-wrap:wrap}
+svg.cv{width:100%;height:150px;display:block;margin-top:10px}
+.bars{display:flex;align-items:flex-end;gap:8px;height:130px;margin-top:6px}
+.bars .b{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.bars .b i{width:100%;border-radius:6px 6px 2px 2px;background:linear-gradient(180deg,var(--pv),#b45309);min-height:2px}
+.bars .b span{font-size:11px;color:var(--dim);margin-top:4px}
+.bars .b em{font-style:normal;font-size:11px;margin-bottom:3px}
+.err{color:var(--rd);font-size:12px}
+</style>
+</head>
+<body>
+<div class="navshade" id="navshade"></div>
+<nav class="sidenav" id="sidenav">
+  <div class="brand">SMART HOME</div>
+    <a href="uebersicht.html">⚡ Übersicht</a>
+    <a href="energy.html">🏠 Übersicht klassisch</a>
+    <a href="ertrag.html" class="active">💶 Ertrag</a>
+    <a href="heizung.html">♨️ Heizung live</a>
+    <a href="klima.html">🔥 Heizung</a>
+    <a href="auto.html">🚗 E-Auto</a>
+    <a href="geraete.html">🛠️ Geräte</a>
+    <a href="monitor.html">🛡️ Monitoring</a>
+    <a href="/fhem" style="border-top:1px solid rgba(255,255,255,.1)">⚙️ FHEM</a>
+</nav>
+<div class="main">
+<div class="headbar">
+  <button class="burger" id="burger">☰</button>
+  <h1>💶 PV-Leistung &amp; Ertragsrechnung</h1>
+  <span class="clock" id="clock"></span>
+</div>
+<div class="wrap">
+  <div class="sum" id="sum"></div>
+  <div id="sites"></div>
+</div>
+<script>
+(function(){
+var SITES=[
+ {id:'g',name:'Große Anlage',base:'http://192.168.176.205:8084',cost:'HA_SDM630M_Allgemein',inv:'PV_Investition_Grosses_System_EUR'},
+ {id:'k',name:'Kleine Anlage',base:'http://192.168.178.21:8084',cost:'HA_SDM630M_Haus',inv:'PV_Investition_Kleines_System_EUR'}
+];
+var DEVS=['HA_SDM630M_PV_Erzeugung','HA_SDM630M_Nergie','DOIF_socMax_adaptiv'];
+var FL='FileLog_Elektrische_Wirkleistungen_Haus_PV_WP';
+function N(x){var v=parseFloat(String(x==null?'':x).replace(',','.'));return isNaN(v)?null:v;}
+function f(v,d){return v==null?'–':v.toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d});}
+function eur(v){return v==null?'–':f(v,v>=1000?0:2)+' €';}
+function tok(s){return fetch(s.base+'/fhem?XHR=1',{cache:'no-store'}).then(function(r){s.tok=r.headers.get('X-FHEM-csrfToken')||'';});}
+function cmd(s,c,json){var go=function(){return fetch(s.base+'/fhem?cmd='+encodeURIComponent(c)+'&XHR=1&fwcsrf='+encodeURIComponent(s.tok||''),{cache:'no-store'}).then(function(r){if(!r.ok)throw r.status;return json?r.json():r.text();});};
+ return (s.tok===undefined?tok(s).then(go):go()).catch(function(e){return tok(s).then(go);});}
+function R(d,dev,rd){var x=d[dev];if(!x||!x[rd])return null;return x[rd].Value;}
+function build(s){
+ var el=document.createElement('div');el.className='site';el.innerHTML=
+ '<h2>☀️ '+s.name+' <span class="st" id="st_'+s.id+'"></span></h2><div class="grid">'+
+ '<div class="tile" id="t_live_'+s.id+'"><h3>Leistung &amp; Ertrag heute</h3><div class="big"><span class="n" id="pv_'+s.id+'">–</span><span class="u">kW</span></div><div class="rows" id="lr_'+s.id+'"></div><svg class="cv" id="cv_'+s.id+'" viewBox="0 0 600 150" preserveAspectRatio="none"></svg></div>'+
+ '<div class="tile" id="t_geld_'+s.id+'"><h3>Kosten &amp; Erlöse heute</h3><div class="rows" id="gr_'+s.id+'"></div></div>'+
+ '<div class="tile" id="t_amort_'+s.id+'"><h3>Amortisation</h3><div id="am_'+s.id+'"></div></div>'+
+ '<div class="tile" id="t_7d_'+s.id+'"><h3>PV-Ertrag letzte 7 Tage</h3><div class="bars" id="b7_'+s.id+'"></div></div>'+
+ '</div>';document.getElementById('sites').appendChild(el);}
+function row(k,v,c){return '<span class="k">'+k+'</span><span class="v'+(c?' '+c:'')+'">'+v+'</span>';}
+function amRow(t,inv,nutz,rest,tag){
+ var p=(inv&&nutz!=null)?Math.max(0,Math.min(100,nutz/inv*100)):null;
+ var tage=(rest!=null&&tag>0)?Math.ceil(rest/tag):null,dt='–';
+ if(tage!=null){var d=new Date();d.setDate(d.getDate()+tage);dt=d.toLocaleDateString('de-DE',{month:'short',year:'numeric'});}
+ return '<div class="am"><div class="hd"><span>'+t+'</span><b>'+(p==null?'–':f(p,1)+' %')+'</b></div><div class="bar"><i style="width:'+(p||0)+'%"></i></div>'+
+ '<div class="ft"><span>Invest '+eur(inv)+'</span><span>Nutzen '+eur(nutz)+'</span><span>Rest '+eur(rest)+'</span><span>'+eur(tag)+'/Tag</span><span>≈ '+dt+'</span></div></div>';}
+var TOT={};
+function vals(s){
+ cmd(s,'jsonlist2 '+DEVS.concat([s.cost]).join(','),true).then(function(j){
+  var d={};(j.Results||[]).forEach(function(r){d[r.Name]=r.Readings||{};});
+  var pv=N(R(d,'HA_SDM630M_PV_Erzeugung','Power_Sum__W1'));
+  var pvd=N(R(d,'HA_SDM630M_PV_Erzeugung','Erz_PV_Energie_kWh_day'));
+  if(pvd==null){var pe=d['HA_SDM630M_PV_Erzeugung']||{};Object.keys(pe).some(function(k){if(/kwh_?day$/i.test(k)){pvd=N(pe[k].Value);return true;}});}
+  document.getElementById('pv_'+s.id).textContent=pv==null?'–':f(pv/1000,2);
+  var ne=d['HA_SDM630M_Nergie']||{},ein=null,bez=null;
+  Object.keys(ne).forEach(function(k){if(!/^statSald_.*kWhDay$/.test(k))return;if(/einsp/i.test(k))ein=N(ne[k].Value);else if(/bezug/i.test(k))bez=N(ne[k].Value);});
+  document.getElementById('lr_'+s.id).innerHTML=row('PV-Ertrag heute',f(pvd,1)+' kWh')+row('Einspeisung heute',f(ein,1)+' kWh','pos')+row('Netzbezug heute',f(bez,1)+' kWh','neg');
+  var c=d[s.cost]||{},g='',kos=0,hasK=false;
+  var erl=N(c.Ertrag_N_Ergie&&c.Ertrag_N_Ergie.Value);g+=row('Einspeiseerlös',eur(erl),'pos');
+  Object.keys(c).sort().forEach(function(k){var m=k.match(/^Kosten_(.+)$/);if(!m)return;var v=N(c[k].Value);if(v==null)return;hasK=true;kos+=v;g+=row('Kosten '+m[1].replace(/_/g,' ').replace('N Ergie','N-ERGIE'),eur(v),'neg');});
+  var zk=N(c.Zaehlerkosten_N_Ergie&&c.Zaehlerkosten_N_Ergie.Value);if(zk!=null)g+=row('Zählerkosten (Monat)',eur(zk),'neg');
+  var eb=N(c.Energiebilanz_gesamt_heute&&c.Energiebilanz_gesamt_heute.Value);if(eb!=null)g+=row('Energiebilanz gesamt heute',f(eb,1));
+  if(hasK&&erl!=null){var sa=erl-kos;g+=row('<b>Saldo heute</b>','<b>'+eur(sa)+'</b>',sa>=0?'pos':'neg');}
+  document.getElementById('gr_'+s.id).innerHTML=g;
+  function cv(k){return N(c[k]&&c[k].Value);}
+  var inv=cv(s.inv),pn=cv('PVoB_Nutzen_EUR'),bn=cv('Batt_Nutzen_EUR');
+  var gn=(pn!=null||bn!=null)?(pn||0)+(bn||0):null;
+  document.getElementById('am_'+s.id).innerHTML=
+   amRow('Gesamt (Break-even)',inv,gn,cv('Break_Even_Restbetrag_EUR'),cv('Break_Even_Tagessatz_EUR'))+
+   amRow('PV ohne Batterie',cv('PVoB_Investition_EUR'),pn,cv('PVoB_Restbetrag_EUR'),cv('PVoB_Tagessatz_EUR'))+
+   amRow('Batteriespeicher',cv('Batt_Investition_EUR'),bn,cv('Batt_Restbetrag_EUR'),cv('Batt_Tagessatz_EUR'));
+  var h=d['DOIF_socMax_adaptiv']||{},arr=[];for(var i=6;i>=0;i--){var v=N(h['pv_ertrag_d'+i]&&h['pv_ertrag_d'+i].Value);arr.push({i:i,v:v});}
+  var mx=Math.max.apply(null,arr.map(function(a){return a.v||0;}).concat([1]));
+  var b7=document.getElementById('b7_'+s.id);
+  if(arr.every(function(a){return a.v==null;})){b7.innerHTML='<div class="err" style="color:var(--dim)">Keine Tageswerte (pv_ertrag_d0..d6) auf dieser Anlage.</div>';}
+  else b7.innerHTML=arr.map(function(a){var dd=new Date();dd.setDate(dd.getDate()-a.i);return '<div class="b"><em>'+f(a.v,0)+'</em><i style="height:'+((a.v||0)/mx*100)+'%"></i><span>'+(a.i==0?'heute':dd.toLocaleDateString('de-DE',{weekday:'short'}))+'</span></div>';}).join('');
+  TOT[s.id]={pv:pv,pvd:pvd,erl:erl,sa:(hasK&&erl!=null)?erl-kos:null,inv:inv,gn:gn};sum();
+  document.getElementById('st_'+s.id).textContent='aktualisiert '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+ }).catch(function(e){document.getElementById('st_'+s.id).innerHTML='<span class="err">nicht erreichbar ('+e+')</span>';});}
+function curve(s){
+ var d=new Date(),p=function(n){return ('0'+n).slice(-2);},day=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+ cmd(s,'get '+FL+' - - '+day+'_00:00:00 '+day+'_23:59:59 4:HA_SDM630M_PV_Erzeugung.Power_Sum__W1\\x3a::',false).then(function(t){
+  var pts=[];t.split('\n').forEach(function(l){var m=l.match(/^\d{4}-\d\d-\d\d_(\d\d):(\d\d):(\d\d)\s+(-?[\d.]+)/);if(m)pts.push([(+m[1])*60+(+m[2])+(+m[3])/60,parseFloat(m[4])]);});
+  var sv=document.getElementById('cv_'+s.id);if(pts.length<2){sv.innerHTML='';return;}
+  var mx=Math.max.apply(null,pts.map(function(q){return q[1];}).concat([500]));
+  var X=function(m){return m/1440*600;},Y=function(v){return 145-Math.max(0,v)/mx*135;};
+  var ln=pts.map(function(q,i){return (i?'L':'M')+X(q[0]).toFixed(1)+' '+Y(q[1]).toFixed(1);}).join(' ');
+  var ar=ln+' L'+X(pts[pts.length-1][0]).toFixed(1)+' 145 L'+X(pts[0][0]).toFixed(1)+' 145 Z';
+  var grid='';[6,9,12,15,18].forEach(function(h){grid+='<line x1="'+X(h*60)+'" x2="'+X(h*60)+'" y1="5" y2="145" stroke="rgba(255,255,255,.06)"/><text x="'+(X(h*60)+3)+'" y="143" fill="#64748b" font-size="10">'+h+'h</text>';});
+  sv.innerHTML='<defs><linearGradient id="gp_'+s.id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbbf24" stop-opacity=".55"/><stop offset="1" stop-color="#fbbf24" stop-opacity="0"/></linearGradient></defs>'+grid+
+   '<path d="'+ar+'" fill="url(#gp_'+s.id+')"/><path d="'+ln+'" fill="none" stroke="#fbbf24" stroke-width="2" vector-effect="non-scaling-stroke"/>'+
+   '<text x="596" y="14" text-anchor="end" fill="#94a3b8" font-size="11">max '+f(mx/1000,1)+' kW</text>';
+ }).catch(function(){});}
+function sum(){
+ var a=Object.keys(TOT).map(function(k){return TOT[k];}),S=function(k){var t=null;a.forEach(function(x){if(x[k]!=null)t=(t||0)+x[k];});return t;};
+ var inv=S('inv'),gn=S('gn');
+ document.getElementById('sum').innerHTML=
+  '<div class="kpi"><div class="l">PV jetzt gesamt</div><div class="v" style="color:var(--pv)">'+f(S('pv')==null?null:S('pv')/1000,2)+'<small>kW</small></div></div>'+
+  '<div class="kpi"><div class="l">PV-Ertrag heute</div><div class="v">'+f(S('pvd'),1)+'<small>kWh</small></div></div>'+
+  '<div class="kpi"><div class="l">Einspeiseerlös heute</div><div class="v pos">'+eur(S('erl'))+'</div></div>'+
+  '<div class="kpi"><div class="l">Saldo heute</div><div class="v '+((S('sa')||0)>=0?'pos':'neg')+'">'+eur(S('sa'))+'</div></div>'+
+  '<div class="kpi"><div class="l">Investition gesamt</div><div class="v">'+eur(inv)+'</div></div>'+
+  '<div class="kpi"><div class="l">Amortisiert gesamt</div><div class="v" style="color:var(--cy)">'+(inv&&gn!=null?f(gn/inv*100,1):'–')+'<small>%</small></div></div>';}
+function initNav(){var b=document.getElementById('burger'),n=document.getElementById('sidenav'),s=document.getElementById('navshade');function t(){n.classList.toggle('open');s.classList.toggle('open');}b.addEventListener('click',t);s.addEventListener('click',t);}
+function startClock(){var c=document.getElementById('clock');function t(){var d=new Date();c.textContent=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}t();setInterval(t,10000);}
+function start(){initNav();startClock();SITES.forEach(build);
+ SITES.forEach(function(s){vals(s);curve(s);setInterval(function(){if(!document.hidden)vals(s);},30000);setInterval(function(){if(!document.hidden)curve(s);},300000);});}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>
+<script src="ue-arrange.js?v=9"></script>
+</div>
+</body>
+</html>

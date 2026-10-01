@@ -1,0 +1,27 @@
+# Created by FHEM/98_SVG.pm, 2023-10-19 15:34:04
+set terminal png transparent size &lt;SIZE&gt; crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'Energie und Leistung Haus/Tag'
+set ytics 
+set y2tics 
+set grid ytics y2tics
+set ylabel "kWh"
+set y2label "Watt"
+set y2range [0:800]
+
+#FileLog_Elektrische_Wirkleistung_Haus_PV_WP 4:httpSolar.current_power\x3a::
+#FileLog_Elektrische_Wirkleistung_Haus_PV_WP 4:HA_SDM630M_Haus.Energieverbrauch_Haus_Tag_kWh\x3a::
+#FileLog_Elektrische_Wirkleistung_Haus_PV_WP 4:HA_SDM630M_Haus.statEnergy_import__kWhDay1\x3a::
+#FileLog_Elektrische_Wirkleistung_Haus_PV_WP 4:HA_SDM630M_Haus.statEnergy_export__kWhDay1\x3a::
+#FileLog_Elektrische_Wirkleistung_Haus_PV_WP 4:httpSolar.Erz_PV_Energie_kWh_day\x3a::
+#FileLog_Elektrische_Wirkleistung_Haus_PV_WP 4:HA_SDM630M_Haus.Eigenverbrauch_PV_Tag_kWh\x3a::
+
+plot "&lt;IN&gt;" using 1:2 axes x1y2 title 'PV Leistung' ls l0 lw 1 with lines,\
+     "&lt;IN&gt;" using 1:2 axes x1y1 title 'Energieverbrauch Haus' ls l1 lw 1 with lines,\
+     "&lt;IN&gt;" using 1:2 axes x1y1 title 'Netzbezug' ls l2 lw 1 with lines,\
+     "&lt;IN&gt;" using 1:2 axes x1y1 title 'Netzrückspeisung' ls l3 lw 1 with lines,\
+     "&lt;IN&gt;" using 1:2 axes x1y1 title 'Erz PV Energie' ls l4 lw 1 with lines,\
+     "&lt;IN&gt;" using 1:2 axes x1y1 title 'PV Eigenverbrauch' ls l5 lw 1 with lines

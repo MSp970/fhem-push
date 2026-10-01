@@ -1,0 +1,17 @@
+set terminal png transparent size <SIZE> crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'WITR MU.AS.I.GAS ETP 2062'
+set ytics
+set grid ytics
+set ylabel "EUR"
+
+#FileLog 4:Aktie_XS2819843223.last\x3a::
+#FileLog 4:Aktie_XS2819843223.bid\x3a::
+#FileLog 4:Aktie_XS2819843223.ask\x3a::
+
+plot "<IN>" using 1:2 axes x1y1 title 'Last' ls l0 lw 2 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'Bid' ls l1 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'Ask' ls l2 lw 1 with lines

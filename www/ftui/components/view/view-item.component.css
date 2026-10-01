@@ -1,0 +1,102 @@
+:host {
+  width: 100%;
+  background-color: var(--view-item-background-color);
+  display: flex;
+}
+
+@media only screen and (min-device-width: 768px) {
+  :host(:hover:not([target=''])) {
+    cursor: pointer;
+    background-color: var(--view-item-active-color);
+  }
+}
+
+:host(:active:not([target=''])) {
+  background-color: var(--view-item-active-color);
+}
+
+:host(:last-child) .content {
+  background-image: linear-gradient(to bottom,var(--view-border-color), var(--view-border-color) 50%, transparent 50%);
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+  background-position: bottom;
+}
+
+.content {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  padding-inline-start: var(--view-item-padding-start, 1.5em);
+  align-items: center;
+  min-height: 2.5em;
+}
+
+.inner {
+  flex: 1;
+  display: flex;
+  align-items: inherit;
+  background-image: linear-gradient(to bottom,var(--view-border-color), var(--view-border-color) 50%, transparent 50%);
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+  background-position: bottom;
+  padding-inline-end: var(--view-item-padding-end, 0.75em);
+  min-height: inherit;
+  position: relative;
+}
+
+:host(:not([target='']):not([plain])) .inner {
+  padding-inline-end: var(--view-item-padding-end, 1.75em);
+}
+
+.inner-wrapper {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline-end: var(--view-item-padding-end, 0.75em);
+}
+
+:host(:not([target='']):not([plain])) .inner:after {
+  content: "\276F";
+  position: absolute;
+  top: 0.6em;
+  right: 1em;
+  color: #aaa;
+}
+
+::slotted([slot=start]) {
+  margin-inline-end: 1em;
+}
+
+::slotted(ftui-icon[slot=start]) {
+  font-size: 90%;
+}
+
+::slotted(ftui-icon[slot=start]) {
+  margin-inline-end: 0.75em;
+  margin-inline-start: -0.75em;
+}
+
+::slotted(ftui-label[slot=end]) {
+  margin-top: -0.125em;
+  font: var(--text-font);
+}
+
+::slotted(ftui-button[slot=end]) {
+  --button-height: 1.85em;
+  --border-radius: 999px;
+  --border-width: 0;
+  --padding-start: 0.85em;
+  --padding-end: 0.85em;
+  --button-solid-background: transparent;
+  --button-solid-color: var(--primary-color);
+  --button-inner-color: var(--primary-color);
+  --button-active-background: color-mix(in srgb, var(--primary-color) 14%, transparent);
+  --button-active-opacity: 1;
+}
+
+::slotted([slot=end]) {
+  margin-inline-end: 0.5em;
+  max-width: 60%;
+}

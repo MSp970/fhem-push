@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes"/>
+<title>Tobi</title>
+<script src="../ftui.js"></script>
+<link href="../ftui.css" rel="stylesheet"/>
+<link href="../themes/ftui-theme.css" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#070b14; --card:rgba(22,29,46,.72); --card2:rgba(30,38,58,.6);
+  --line:rgba(120,150,200,.14); --txt:#e6ebf2; --dim:#7f8fa6;
+  --pv:#ffb300; --grid:#00e5ff; --bez:#ff5d73; --bat:#4ade80;
+  --wp:#b388ff; --deye:#ff8a3d;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;color:var(--txt);
+  font-family:"Segoe UI",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased}
+body{min-height:100vh;background:
+  radial-gradient(1200px 600px at 10% -10%,rgba(255,179,0,.10),transparent 60%),
+  radial-gradient(900px 500px at 100% 0%,rgba(0,229,255,.08),transparent 60%),
+  var(--bg);background-attachment:fixed}
+.sidenav{width:230px;background:#0a0e18;border-right:1px solid var(--line);
+  padding:18px 0;position:fixed;top:0;left:0;height:100vh;z-index:20;
+  transform:translateX(-100%);transition:transform .25s ease;
+  box-shadow:0 0 30px rgba(0,0,0,.6)}
+.sidenav.open{transform:translateX(0)}
+.navshade{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:19;
+  display:none}
+.navshade.open{display:block}
+.brand{padding:0 22px 16px;font-weight:800;letter-spacing:2px;
+  color:var(--grid);font-size:17px}
+.sidenav a{display:block;padding:11px 22px;color:var(--txt);
+  text-decoration:none;font-size:20px}
+.sidenav a:hover,.sidenav a.active{background:rgba(0,229,255,.08);
+  color:var(--grid)}
+.main{padding:10px 16px 14px;max-width:1500px;margin:0 auto}
+.headbar{display:flex;align-items:center;gap:18px;height:44px;
+  margin-bottom:10px}
+.burger{background:none;border:0;color:var(--txt);font-size:29px;
+  cursor:pointer;padding:0 6px}
+.hi{display:flex;align-items:baseline;gap:5px;font-size:20px;
+  font-weight:700;white-space:nowrap}
+.hi .u{color:var(--dim);font-size:16px;font-weight:600}
+.hi ftui-label{display:inline-flex}
+.spacer{flex:1}
+.clock{font-size:29px;font-weight:800;color:var(--grid);
+  letter-spacing:1px}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.7fr);
+  gap:12px;margin-top:12px}
+.card{position:relative;background:linear-gradient(160deg,var(--card),var(--card2));
+  border:1px solid var(--line);border-radius:14px;padding:12px 14px 10px;
+  backdrop-filter:blur(8px);overflow:hidden;
+  box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.card::before{content:"";position:absolute;left:0;top:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--acc,var(--grid)),transparent)}
+.card h3{margin:0 0 8px;font-size:17px;font-weight:700;
+  letter-spacing:.6px;text-transform:uppercase;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;color:var(--acc,var(--grid))}
+.card h3 small{color:var(--dim);font-weight:600;text-transform:none;
+  letter-spacing:0;font-size:16px;margin-left:6px}
+.hero{display:flex;align-items:baseline;gap:8px;margin:2px 0 8px}
+.hero .n{font-size:39px;font-weight:800;letter-spacing:-.5px}
+.hero .u{color:var(--dim);font-size:18px;font-weight:600}
+.hero ftui-label,.kv ftui-label,.st ftui-label{display:inline-flex}
+.kv{display:flex;align-items:baseline;justify-content:space-between;
+  font-size:17px;padding:3px 0;border-top:1px solid rgba(255,255,255,.04)}
+.kv .k{color:var(--dim)}
+.kv .v{font-weight:700;display:flex;align-items:baseline;gap:5px}
+.kv .v .u{color:var(--dim);font-weight:600;font-size:14px;min-width:24px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stats.s6{grid-template-columns:repeat(6,minmax(0,1fr))}
+.st{background:rgba(255,255,255,.03);border:1px solid var(--line);
+  border-radius:10px;padding:7px 9px}
+.st .l{font-size:14px;color:var(--dim);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.st .v{font-size:25px;font-weight:800;display:flex;align-items:baseline;
+  gap:5px;margin-top:2px}
+.st .v small{font-size:14px;color:var(--dim);font-weight:600}
+.stats.s6 .st .v{font-size:20px}
+.stats.s6 .st{padding:7px 7px}
+.sub{font-size:14px;color:var(--dim);margin:8px 0 5px;letter-spacing:.5px;
+  text-transform:uppercase}
+.pv{--acc:var(--pv)} .bat{--acc:var(--bat)} .dy{--acc:var(--deye)}
+.gr{--acc:var(--grid)}
+.c-pv{color:var(--pv)} .c-gr{color:var(--grid)} .c-bez{color:var(--bez)}
+.chart{margin-top:12px}
+.chart ftui-chart{display:block;width:100%}
+@media (max-width:1100px){
+  .grid4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid2{grid-template-columns:1fr}
+  .stats.s6{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:600px){
+  .grid4{grid-template-columns:1fr}
+  .hi:nth-of-type(n+4){display:none}
+}
+.tb{width:100%;border-collapse:collapse;font-size:17px;margin-bottom:6px}
+.tb th{color:var(--dim);font-weight:600;font-size:14px;text-align:right;padding:2px 4px}
+.tb td{padding:4px 4px;text-align:right;font-weight:700;border-top:1px solid rgba(255,255,255,.04)}
+.tb td:first-child{text-align:left;font-weight:600;color:var(--dim)}
+.tb td.c-pv{color:var(--pv)} .tb td.c-bat{color:var(--bat)} .tb td.c-bez{color:var(--bez)}
+.tb ftui-label{display:inline-flex}
+.c-bat{color:var(--bat)} .wp{--acc:var(--wp)}
+.btns{display:flex;gap:6px;margin:2px 0 6px;justify-content:flex-end}
+.btn{background:rgba(255,255,255,.06);color:var(--txt);border:1px solid var(--line);
+  border-radius:8px;padding:4px 10px;font-size:14px;font-weight:700;cursor:pointer;
+  transition:background .15s,border-color .15s}
+.btn:hover{background:rgba(0,229,255,.12);border-color:var(--grid)}
+.btn.ok{background:rgba(74,222,128,.25);border-color:var(--bat)}
+.btn.err{background:rgba(255,93,115,.3);border-color:var(--bez)}
+.kv .v{gap:6px}
+.kv .v .btn{padding:2px 8px;font-size:13px}
+.kv{font-size:15px}
+.kv .k{margin-right:8px}
+.seg{display:flex;justify-content:flex-end;margin:0 0 6px}
+.seg .sbtn{background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+  color:var(--txt);border:1px solid var(--line);border-left-width:0;
+  height:26px;min-width:34px;padding:0 9px;font-size:12px;font-weight:700;
+  cursor:pointer;transition:all .15s;line-height:24px}
+.seg .sbtn:first-child{border-left-width:1px;border-radius:13px 0 0 13px}
+.seg .sbtn:last-child{border-radius:0 13px 13px 0}
+.seg .sbtn:hover{background:linear-gradient(180deg,rgba(255,179,0,.35),rgba(255,179,0,.12));
+  color:#fff;box-shadow:0 0 10px rgba(255,179,0,.35)}
+.seg .sbtn:active{transform:scale(.94)}
+.seg .sbtn.ok{background:rgba(74,222,128,.35)} .seg .sbtn.err{background:rgba(255,93,115,.4)}
+.allg{--acc:#f472b6} .eg{--acc:#60a5fa}
+.seg.sm{margin:0 0 0 8px;display:inline-flex}
+.seg .sbtn.go:hover{background:linear-gradient(180deg,rgba(74,222,128,.4),rgba(74,222,128,.12));box-shadow:0 0 10px rgba(74,222,128,.35)}
+.c-bat{color:var(--bat)} .c-bez{color:var(--bez)} .c-pv{color:var(--pv)}
+.stats.s8{grid-template-columns:repeat(8,minmax(0,1fr))}
+.stats.s8 .st .v{font-size:15px;flex-wrap:wrap}
+@media (max-width:1100px){.stats.s8{grid-template-columns:repeat(4,minmax(0,1fr))}}
+/* tobi-mobil-fit */
+@media (max-width:600px){
+.stats.s8,.stats.s6{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.stats.s8 .st .v{font-size:17px}
+.st .l{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.2}
+.tb{font-size:14px}.tb td,.tb th{padding:3px 2px}.tb th{font-size:12px}
+.kv{flex-wrap:wrap;row-gap:2px}.kv .k{flex:1 1 40%;min-width:0}
+.kv .v{flex-wrap:wrap;justify-content:flex-end;text-align:right;max-width:100%}
+.card{overflow-wrap:anywhere}
+.card h3{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+}
+</style>
+</head>
+<body>
+<div class="navshade" id="navshade"></div>
+<nav class="sidenav" id="sidenav">
+  <div class="brand">SMART HOME</div>
+  <a href="uebersicht.html">⚡ Übersicht</a>
+  <a href="pv.html">🔆 PV-Anlage</a>
+  <a href="heizung.html">♨️ Heizung live</a>
+  <a href="klima.html">🔥 Heizung</a>
+  <a href="ertrag.html">&#128182; Ertrag</a>
+  <a href="eauto.html">🚗 E-Autos</a>
+  <a href="tobi.html" class="active">👤 Tobi</a>
+  <a href="geraete.html">🛠️ Geräte</a>
+  <a href="monitor.html">🛡️ Monitoring</a>
+  <a href="/fhem" style="border-top:1px solid rgba(255,255,255,.1)">⚙️ FHEM</a>
+</nav>
+
+<div class="main">
+<div class="headbar">
+  <style>.headbar .hi{display:flex;align-items:center;gap:5px;font-weight:700;font-size:14px;white-space:nowrap}.headbar .hi .u{color:#8496ab;font-weight:600;font-size:12px}@media(max-width:700px){.headbar .hb-opt{display:none!important}}</style>
+  <button class="burger" id="burger">☰</button>
+  <div class="hi" title="PV gesamt">🔆 <ftui-label [text]="di_DashWerte:PV_gesamt"></ftui-label> <span class="u">W</span></div>
+  <div class="hi hb-opt" title="Hausverbrauch">🏠 <ftui-label [text]="HA_SDM630M_Nergie:Summe_Leistungsbezug_Haus_gesamt"></ftui-label> <span class="u">W</span></div>
+  <div class="hi" title="Speicher SOC">🔋 <ftui-label [text]="di_DashWerte:SOC_gew"></ftui-label> <span class="u">%</span></div>
+  <div class="hi" title="Netz: + Bezug / - Einspeisung">🔌 <ftui-label [text]="HA_SDM630M_Nergie:Power_Sum__W"></ftui-label> <span class="u">W</span></div>
+  <div class="hi hb-opt" title="Wallbox links / rechts">🚗 <ftui-label [text]="OpenWB_Garage_links:Ladeleistung_gesamt_kW"></ftui-label> / <ftui-label [text]="OpenWB_Garage_rechts:Ladeleistung_gesamt_kW"></ftui-label> <span class="u">kW</span></div>
+  <div class="spacer"></div>
+  <div class="hi" title="Aussentemperatur">🌡️ <ftui-label [text]="BresserWetter:temperatur_aussen"></ftui-label> <span class="u">°C</span></div>
+  <div class="clock" id="clock"></div>
+</div>
+
+<div class="grid4">
+  <div class="card gr">
+    <h3>Bilanz gesamt<small>A9</small></h3>
+    <table class="tb"><tr><th></th><th>W</th><th>kWh</th><th>%</th></tr>
+      <tr><td class="c-pv">PV</td><td><ftui-label [text]="HA_SDM630M_Nergie:Gesamtleistung_PV_Anteil"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Nergie:Gesamtenergie_PV"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Nergie:Proz_Gesamtenergie_PV"></ftui-label></td></tr>
+      <tr><td class="c-bat">Batterie</td><td><ftui-label [text]="HA_SDM630M_Nergie:Gesamtleistung_Batt_Anteil"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Nergie:Gesamtenergie_Batt"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Nergie:Proz_Gesamtenergie_Batt"></ftui-label></td></tr>
+      <tr><td class="c-bez">Netz</td><td><ftui-label [text]="HA_SDM630M_Nergie:Gesamtleistung_EVU_Anteil"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Nergie:Gesamtenergie_EVU"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Nergie:Proz_Gesamtenergie_EVU"></ftui-label></td></tr>
+    </table>
+    <div class="kv"><span class="k">Leistung gesamt</span><span class="v"><ftui-label [text]="HA_SDM630M_Nergie:Summe_Leistungsverbrauch_Haus_gesamt"></ftui-label><span class="u">W</span></span></div>
+    <div class="kv"><span class="k">Energie Summe</span><span class="v"><ftui-label [text]="HA_SDM630M_Nergie:Gesamtenergie_Summe"></ftui-label><span class="u">kWh</span></span></div>
+    <div class="kv"><span class="k">Live-Anteil</span><span class="v"><span class="c-pv"><ftui-label [text]="HA_SDM630M_Nergie:0PV_Anteil_proz"></ftui-label></span>/<span class="c-bat"><ftui-label [text]="HA_SDM630M_Nergie:0Batterie_Anteil_proz"></ftui-label></span>/<span class="c-bez"><ftui-label [text]="HA_SDM630M_Nergie:0Netz_Anteil_proz"></ftui-label></span><span class="u">%</span></span></div>
+  </div>
+  <div class="card allg">
+    <h3>Bilanz Allgemein<small></small></h3>
+    <table class="tb"><tr><th></th><th>W</th><th>kWh</th><th>%</th></tr>
+      <tr><td class="c-pv">PV</td><td><ftui-label [text]="HA_SDM630M_Allgemein:0Leistung_Allg_Anteil_PV"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Allgemein:0Energie_Allg_PV_kWh"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Allgemein:Proz_Energie_PV"></ftui-label></td></tr>
+      <tr><td class="c-bat">Batterie</td><td><ftui-label [text]="HA_SDM630M_Allgemein:0Leistung_Allg_Anteil_Batterie"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Allgemein:0Energie_Allg_Batterie_kWh"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Allgemein:Proz_Energie_Batt"></ftui-label></td></tr>
+      <tr><td class="c-bez">Netz</td><td><ftui-label [text]="HA_SDM630M_Allgemein:0Leistung_Allg_Anteil_EVU"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Allgemein:0Energie_Allg_EVU_kWh"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Allgemein:Proz_Energie_EVU"></ftui-label></td></tr>
+    </table>
+    <div class="kv"><span class="k">Leistung gesamt</span><span class="v"><ftui-label [text]="HA_SDM630M_Allgemein:Power_Sum__W"></ftui-label><span class="u">W</span></span></div>
+    <div class="kv"><span class="k">Energie Summe</span><span class="v"><ftui-label [text]="HA_SDM630M_Allgemein:Energie_Summe"></ftui-label><span class="u">kWh</span></span></div>
+    <div class="kv"><span class="k">Energie heute</span><span class="v"><ftui-label [text]="HA_SDM630M_Allgemein:statEnergy_import__kWhDay1"></ftui-label><span class="u">kWh</span></span></div>
+  </div>
+  <div class="card eg">
+    <h3>Bilanz EG<small></small></h3>
+    <table class="tb"><tr><th></th><th>W</th><th>kWh</th><th>%</th></tr>
+      <tr><td class="c-pv">PV</td><td><ftui-label [text]="HA_SDM630M_Wohnung_EG:0Leistung_EG_Anteil_PV"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Wohnung_EG:0Energie_EG_PV_kWh"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Wohnung_EG:Proz_Energie_PV"></ftui-label></td></tr>
+      <tr><td class="c-bat">Batterie</td><td><ftui-label [text]="HA_SDM630M_Wohnung_EG:0Leistung_EG_Anteil_Batterie"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Wohnung_EG:0Energie_EG_Batterie_kWh"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Wohnung_EG:Proz_Energie_Batt"></ftui-label></td></tr>
+      <tr><td class="c-bez">Netz</td><td><ftui-label [text]="HA_SDM630M_Wohnung_EG:0Leistung_EG_Anteil_EVU"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Wohnung_EG:0Energie_EG_EVU_kWh"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Wohnung_EG:Proz_Energie_EVU"></ftui-label></td></tr>
+    </table>
+    <div class="kv"><span class="k">Leistung ohne WB</span><span class="v"><ftui-label [text]="HA_SDM630M_Wohnung_EG:Power_Sum_ohne_WB__W1"></ftui-label><span class="u">W</span></span></div>
+    <div class="kv"><span class="k">Energie Summe</span><span class="v"><ftui-label [text]="HA_SDM630M_Wohnung_EG:Energie_Summe"></ftui-label><span class="u">kWh</span></span></div>
+    <div class="kv"><span class="k">Energie heute ohne WB</span><span class="v"><ftui-label [text]="HA_SDM630M_Wohnung_EG:Energie_Summe_heute"></ftui-label><span class="u">kWh</span></span></div>
+  </div>
+  <div class="card wp">
+    <h3>Bilanz WP<small></small></h3>
+    <table class="tb"><tr><th></th><th>W</th><th>kWh</th><th>%</th></tr>
+      <tr><td class="c-pv">PV</td><td><ftui-label [text]="HA_SDM630M_Heatpump:0Leistung_HP_Anteil_PV"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Heatpump:0Energie_HP_PV_kWh"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Heatpump:Proz_Energie_PV"></ftui-label></td></tr>
+      <tr><td class="c-bat">Batterie</td><td><ftui-label [text]="HA_SDM630M_Heatpump:0Leistung_HP_Anteil_Batterie"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Heatpump:0Energie_HP_Batterie_kWh"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Heatpump:Proz_Energie_Batt"></ftui-label></td></tr>
+      <tr><td class="c-bez">Netz</td><td><ftui-label [text]="HA_SDM630M_Heatpump:0Leistung_HP_Anteil_EVU"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Heatpump:0Energie_HP_EVU_kWh"></ftui-label></td><td><ftui-label [text]="HA_SDM630M_Heatpump:Proz_Energie_EVU"></ftui-label></td></tr>
+    </table>
+    <div class="kv"><span class="k">Leistung gesamt</span><span class="v"><ftui-label [text]="HA_SDM630M_Heatpump:Power_Sum__W"></ftui-label><span class="u">W</span></span></div>
+    <div class="kv"><span class="k">Energie Summe</span><span class="v"><ftui-label [text]="HA_SDM630M_Heatpump:Energie_Summe"></ftui-label><span class="u">kWh</span></span></div>
+    <div class="kv"><span class="k">Energie heute</span><span class="v"><ftui-label [text]="HA_SDM630M_Heatpump:statEnergy_import__kWhDay1"></ftui-label><span class="u">kWh</span></span></div>
+  </div>
+</div>
+
+<div class="grid4" style="margin-top:12px">
+  <div class="card gr">
+    <h3>Wetter<small>Oberschöllenbach</small></h3>
+    <div class="kv"><span class="k">Temperatur</span><span class="v"><ftui-label [text]="BresserWetter:temperatur_aussen"></ftui-label><span class="u">°C</span></span></div>
+    <div class="kv"><span class="k">Gefühlt</span><span class="v"><ftui-label [text]="BresserWetter:gefuehlte_temperatur"></ftui-label><span class="u">°C</span></span></div>
+    <div class="kv"><span class="k">Luftfeuchte</span><span class="v"><ftui-label [text]="BresserWetter:feuchte_aussen"></ftui-label><span class="u">%</span></span></div>
+    <div class="kv"><span class="k">Taupunkt</span><span class="v"><ftui-label [text]="BresserWetter:taupunkt"></ftui-label><span class="u">°C</span></span></div>
+    <div class="kv"><span class="k">Luftdruck</span><span class="v"><ftui-label [text]="BresserWetter:luftdruck_relativ"></ftui-label><span class="u">hPa</span></span></div>
+    <div class="kv"><span class="k">Wind / Böe</span><span class="v"><ftui-label [text]="BresserWetter:windgeschwindigkeit_kmh"></ftui-label>/<ftui-label [text]="BresserWetter:windboe_kmh"></ftui-label><span class="u">km/h</span></span></div>
+    <div class="kv"><span class="k">Windrichtung</span><span class="v">aus <ftui-label [text]="BresserWetter:windrichtung"></ftui-label><span class="u">(<ftui-label [text]="BresserWetter:windrichtung_grad"></ftui-label>°)</span></span></div>
+    <div class="kv"><span class="k">UV-Index</span><span class="v"><ftui-label [text]="BresserWetter:uv_index"></ftui-label><span class="u"></span></span></div>
+    <div class="kv"><span class="k">Sonne</span><span class="v"><ftui-label [text]="BresserWetter:sonneneinstrahlung"></ftui-label><span class="u">W/m²</span></span></div>
+    <div class="kv"><span class="k">Bewölkung</span><span class="v"><ftui-label [text]="Beschattung_Config:Bewoelkung"></ftui-label><span class="u">%</span></span></div>
+    <div class="kv"><span class="k">Regenrate</span><span class="v"><ftui-label [text]="BresserWetter:regenrate"></ftui-label><span class="u">mm/h</span></span></div>
+    <div class="kv"><span class="k">Regen heute</span><span class="v"><ftui-label [text]="BresserWetter:regen_tag"></ftui-label><span class="u">mm</span></span></div>
+  </div>
+  <div class="card wp">
+    <h3>Raumklima<small>Tado</small></h3>
+    <table class="tb"><tr><th></th><th>°C</th><th>Soll</th><th>%</th></tr>
+      <tr><td>Wohnzimmer<ftui-label class="tbat" style="display:none" [text]="Tado_EG_Wohnzimmer:battery"></ftui-label><ftui-label class="tkomm" style="display:none" [text]="Tado_EG_Wohnzimmer:komm_status"></ftui-label><span class="batx"></span></td><td><ftui-label [text]="Tado_EG_Wohnzimmer:sensorDataPoints_insideTemperature_value"></ftui-label></td><td><ftui-label [text]="Tado_EG_Wohnzimmer:setting_temperature"></ftui-label></td><td><ftui-label [text]="Tado_EG_Wohnzimmer:sensorDataPoints_humidity_percentage"></ftui-label></td></tr>
+      <tr><td>Küche<ftui-label class="tbat" style="display:none" [text]="Tado_EG_Kueche:battery"></ftui-label><ftui-label class="tkomm" style="display:none" [text]="Tado_EG_Kueche:komm_status"></ftui-label><span class="batx"></span></td><td><ftui-label [text]="Tado_EG_Kueche:sensorDataPoints_insideTemperature_value"></ftui-label></td><td><ftui-label [text]="Tado_EG_Kueche:setting_temperature"></ftui-label></td><td><ftui-label [text]="Tado_EG_Kueche:sensorDataPoints_humidity_percentage"></ftui-label></td></tr>
+      <tr><td>Wintergarten<ftui-label class="tbat" style="display:none" [text]="Tado_EG_Wintergarten:battery"></ftui-label><ftui-label class="tkomm" style="display:none" [text]="Tado_EG_Wintergarten:komm_status"></ftui-label><span class="batx"></span></td><td><ftui-label [text]="Tado_EG_Wintergarten:sensorDataPoints_insideTemperature_value"></ftui-label></td><td><ftui-label [text]="Tado_EG_Wintergarten:setting_temperature"></ftui-label></td><td><ftui-label [text]="Tado_EG_Wintergarten:sensorDataPoints_humidity_percentage"></ftui-label></td></tr>
+      <tr><td>Büro<ftui-label class="tbat" style="display:none" [text]="Tado_EG_Buero:battery"></ftui-label><ftui-label class="tkomm" style="display:none" [text]="Tado_EG_Buero:komm_status"></ftui-label><span class="batx"></span></td><td><ftui-label [text]="Tado_EG_Buero:sensorDataPoints_insideTemperature_value"></ftui-label></td><td><ftui-label [text]="Tado_EG_Buero:setting_temperature"></ftui-label></td><td><ftui-label [text]="Tado_EG_Buero:sensorDataPoints_humidity_percentage"></ftui-label></td></tr>
+      <tr><td>Schlafzimmer<ftui-label class="tbat" style="display:none" [text]="Tado_EG_Schlafzimmer:battery"></ftui-label><ftui-label class="tkomm" style="display:none" [text]="Tado_EG_Schlafzimmer:komm_status"></ftui-label><span class="batx"></span></td><td><ftui-label [text]="Tado_EG_Schlafzimmer:sensorDataPoints_insideTemperature_value"></ftui-label></td><td><ftui-label [text]="Tado_EG_Schlafzimmer:setting_temperature"></ftui-label></td><td><ftui-label [text]="Tado_EG_Schlafzimmer:sensorDataPoints_humidity_percentage"></ftui-label></td></tr>
+      <tr><td>Bad<ftui-label class="tbat" style="display:none" [text]="Tado_EG_Bad:battery"></ftui-label><ftui-label class="tkomm" style="display:none" [text]="Tado_EG_Bad:komm_status"></ftui-label><span class="batx"></span></td><td><ftui-label [text]="Tado_EG_Bad:sensorDataPoints_insideTemperature_value"></ftui-label></td><td><ftui-label [text]="Tado_EG_Bad:setting_temperature"></ftui-label></td><td><ftui-label [text]="Tado_EG_Bad:sensorDataPoints_humidity_percentage"></ftui-label></td></tr>
+      <tr><td>Gäste-WC<ftui-label class="tbat" style="display:none" [text]="Tado_EG_GaesteWC:battery"></ftui-label><ftui-label class="tkomm" style="display:none" [text]="Tado_EG_GaesteWC:komm_status"></ftui-label><span class="batx"></span></td><td><ftui-label [text]="Tado_EG_GaesteWC:sensorDataPoints_insideTemperature_value"></ftui-label></td><td><ftui-label [text]="Tado_EG_GaesteWC:setting_temperature"></ftui-label></td><td><ftui-label [text]="Tado_EG_GaesteWC:sensorDataPoints_humidity_percentage"></ftui-label></td></tr>
+    </table>
+    <div class="kv"><span class="k">Stand</span><span class="v"><ftui-label [text]="Tado_EG_Wohnzimmer:sensorDataPoints_insideTemperature_value:time | toDate() | format('DD.MM. hh:mm:ss')"></ftui-label><span class="u"></span></span></div>
+    <div class="kv"><span class="k">Kommunikation</span><span class="v"><ftui-label id="tkommtxt" [text]="Monitor:tado_text"></ftui-label></span></div>
+    <div style="color:var(--dim);font-size:12px;margin-top:4px">Raum antippen = Solltemperatur einstellen</div>
+  </div>
+  <div class="card pv">
+    <h3>Beschattung<small>WG · SZ</small></h3>
+    <div class="kv"><span class="k">Markise WG</span><span class="v"><ftui-label [text]="Markise_WG:lage"></ftui-label> · <ftui-label [text]="Markise_WG:pct"></ftui-label><span class="u">%</span></span></div>
+    <div class="seg"><button class="sbtn" data-cmd="set Markise_WG pct 0" title="einfahren">▲</button><button class="sbtn" data-cmd="set Markise_WG pct 50" title="50 %">◐</button><button class="sbtn" data-cmd="set Markise_WG pct 100" title="ausfahren">▼</button><button class="sbtn" data-cmd="set Markise_WG stop" title="Stop">■</button></div>
+    <div class="kv"><span class="k">Markise SZ</span><span class="v"><ftui-label [text]="myShelly_SZ_Markise:lage"></ftui-label> · <ftui-label [text]="myShelly_SZ_Markise:pct"></ftui-label><span class="u">%</span></span></div>
+    <div class="seg"><button class="sbtn" data-cmd="set myShelly_SZ_Markise pct 0" title="einfahren">▲</button><button class="sbtn" data-cmd="set myShelly_SZ_Markise pct 50" title="50 %">◐</button><button class="sbtn" data-cmd="set myShelly_SZ_Markise pct 100" title="ausfahren">▼</button><button class="sbtn" data-cmd="set myShelly_SZ_Markise stop" title="Stop">■</button></div>
+    <div class="kv"><span class="k">Automatik</span><span class="v"><ftui-label [text]="Beschattung_Config:BeschattungStatus"></ftui-label> · <ftui-label [text]="Beschattung_Config:Modus"></ftui-label><span class="u"></span></span></div>
+    <div class="kv"><span class="k">Grund</span><span class="v"><ftui-label [text]="Beschattung_Config:Grund"></ftui-label><span class="u"></span></span></div>
+    <div class="kv"><span class="k">Innen / Außen</span><span class="v"><ftui-label [text]="Beschattung_Config:InnenTemp"></ftui-label>/<ftui-label [text]="Beschattung_Config:AussenTemp"></ftui-label><span class="u">°C</span></span></div>
+    <div class="kv"><span class="k">Sonne Azimut</span><span class="v"><ftui-label [text]="Beschattung_Config:SonneAzimut"></ftui-label><span class="u">°</span></span></div>
+    <div class="kv"><span class="k">Letzte Auto-Fahrt WG</span><span class="v"><ftui-label [text]="Beschattung_Config:LetzteAktion:time | toDate() | format('DD.MM. hh:mm:ss')"></ftui-label><span class="u"></span></span></div>
+    <div class="kv"><span class="k">Letzte Fahrt SZ</span><span class="v"><ftui-label [text]="myShelly_SZ_Markise:pct:time | toDate() | format('DD.MM. hh:mm:ss')"></ftui-label><span class="u"></span></span></div>
+  </div>
+  <div class="card bat">
+    <h3>Garten<small></small></h3>
+    <div class="kv"><span class="k">Zisternenpumpe</span><span class="v"><ftui-label [text]="Zisternenpumpe:state"></ftui-label> · <ftui-label [text]="Zisternenpumpe:state:time | toDate() | format('DD.MM. hh:mm:ss')"></ftui-label><span class="u"></span></span></div>
+    <div class="kv"><span class="k">Zisterne leer</span><span class="v"><ftui-label [text]="Zisterne_leer_erkannt:leer_txt"></ftui-label><span class="u"></span></span></div>
+    <div class="kv"><span class="k">Zisterne heute/akt.</span><span class="v"><ftui-label [text]="BresserWetter:Heutige_Zisternenfuellung_m3"></ftui-label>/<ftui-label [text]="BresserWetter:Aktuelle_Zisternenfuellung_m3"></ftui-label><span class="u">m³</span></span></div>
+    <div class="kv"><span class="k">Auto-Gießen Start</span><span class="v"><ftui-label [text]="DOIF_Bewaesserung:Bewaesserung_Start:time | toDate() | format('DD.MM. hh:mm:ss')"></ftui-label><span class="u"></span></span></div>
+    <div class="kv"><span class="k">Auto-Gießen Ende</span><span class="v"><ftui-label [text]="DOIF_Bewaesserung:Bewaesserung_Ende:time | toDate() | format('DD.MM. hh:mm:ss')"></ftui-label><span class="u"></span></span></div>
+    <div class="kv"><span class="k">Status</span><span class="v"><ftui-label [text]="DOIF_Bewaesserung:dbg_reason_txt"></ftui-label><span class="u"></span></span></div>
+    <div class="kv"><span class="k">Einspeise-Stufe</span><span class="v"><ftui-label [text]="Einspeiseleistung_Stufe:stufe_txt"></ftui-label><span class="u"></span></span></div>
+    <div class="sub">Programme</div>
+    <div class="kv"><span class="k">Alle je 15 min</span><span class="v"><ftui-label [text]="Bewaesserung_alle_je15min:state:time | toDate() | format('DD.MM. hh:mm')"></ftui-label><span class="seg sm"><button class="sbtn go" data-ask="1" data-cmd="set Bewaesserung_alle_je15min on" title="Start">▶</button><button class="sbtn" data-cmd="set Bewaesserung_alle_je15min off" title="Aus">■</button></span></span></div>
+    <div class="kv"><span class="k">Alle je 20 min</span><span class="v"><ftui-label [text]="Bewaesserung_alle_je20min:state:time | toDate() | format('DD.MM. hh:mm')"></ftui-label><span class="seg sm"><button class="sbtn go" data-ask="1" data-cmd="set Bewaesserung_alle_je20min on" title="Start">▶</button><button class="sbtn" data-cmd="set Bewaesserung_alle_je20min off" title="Aus">■</button></span></span></div>
+    <div class="kv"><span class="k">Süd 25 min</span><span class="v"><ftui-label [text]="Bewaesserung_lageabhaengig_sued_25min:state:time | toDate() | format('DD.MM. hh:mm')"></ftui-label><span class="seg sm"><button class="sbtn go" data-ask="1" data-cmd="set Bewaesserung_lageabhaengig_sued_25min on" title="Start">▶</button><button class="sbtn" data-cmd="set Bewaesserung_lageabhaengig_sued_25min off" title="Aus">■</button></span></span></div>
+  </div>
+</div>
+
+<div class="card bat" style="margin-top:12px">
+  <h3>Bewässerung · Diagnose<small>Automatik-Logik</small></h3>
+    <div class="stats s8">
+      <div class="st"><div class="l">Letzte Prüfung</div><div class="v"><ftui-label [text]="DOIF_Bewaesserung:dbg_reason:time | toDate() | format('DD.MM. hh:mm:ss')"></ftui-label></div></div>
+      <div class="st"><div class="l">Letztes Gießen</div><div class="v"><ftui-label [text]="DOIF_Bewaesserung:lastWater"></ftui-label></div></div>
+      <div class="st"><div class="l">Nächstes Gießen (Prognose)</div><div class="v"><ftui-label [text]="DOIF_Bewaesserung:dbg_next_watering"></ftui-label></div></div>
+      <div class="st"><div class="l">Std. seit Gießen</div><div class="v"><ftui-label [text]="DOIF_Bewaesserung:dbg_stunden_seit_watering"></ftui-label><small>h</small></div></div>
+      <div class="st"><div class="l">Entscheidung</div><div class="v"><ftui-label [text]="DOIF_Bewaesserung:dbg_reason_txt"></ftui-label></div></div>
+      <div class="st"><div class="l">Bedarf / Start</div><div class="v"><ftui-label [text]="DOIF_Bewaesserung:dbg_bedarf"></ftui-label> / <ftui-label [text]="DOIF_Bewaesserung:dbg_start"></ftui-label></div></div>
+      <div class="st"><div class="l">Sperre</div><div class="v"><ftui-label [text]="DOIF_Bewaesserung:dbg_block"></ftui-label> · <ftui-label [text]="DOIF_Bewaesserung:dbg_block_grund"></ftui-label></div></div>
+      <div class="st"><div class="l">Manuell zuletzt</div><div class="v"><ftui-label [text]="DOIF_Bewaesserung:letzteManuell_Ende"></ftui-label></div></div>
+      <div class="st"><div class="l">Boden S/O/N</div><div class="v"><ftui-label [text]="DOIF_Bewaesserung:SoilIndex_sued"></ftui-label>/<ftui-label [text]="DOIF_Bewaesserung:SoilIndex_ost"></ftui-label>/<ftui-label [text]="DOIF_Bewaesserung:SoilIndex_nord"></ftui-label></div></div>
+      <div class="st"><div class="l">Defizit S/O/N</div><div class="v"><ftui-label [text]="DOIF_Bewaesserung:dbg_deficit_sued"></ftui-label>/<ftui-label [text]="DOIF_Bewaesserung:dbg_deficit_ost"></ftui-label>/<ftui-label [text]="DOIF_Bewaesserung:dbg_deficit_nord"></ftui-label><small>mm</small></div></div>
+      <div class="st"><div class="l">Regen heute/Progn.</div><div class="v"><ftui-label [text]="DOIF_Bewaesserung:dbg_regen_heute"></ftui-label>/<ftui-label [text]="DOIF_Bewaesserung:dbg_regen_forecast"></ftui-label><small>mm</small></div></div>
+      <div class="st"><div class="l">ET Basis</div><div class="v"><ftui-label [text]="DOIF_Bewaesserung:dbg_et_basis"></ftui-label><small>mm/d</small></div></div>
+      <div class="st"><div class="l">Dauer S/O/N</div><div class="v"><ftui-label [text]="DOIF_Bewaesserung:dauer_sued"></ftui-label>/<ftui-label [text]="DOIF_Bewaesserung:dauer_ost"></ftui-label>/<ftui-label [text]="DOIF_Bewaesserung:dauer_nord"></ftui-label><small>min</small></div></div>
+      <div class="st"><div class="l">PV ok / jetzt</div><div class="v"><ftui-label [text]="DOIF_Bewaesserung:dbg_pv_ok"></ftui-label> · <ftui-label [text]="DOIF_Bewaesserung:dbg_pv_now_w"></ftui-label><small>W</small></div></div>
+      <div class="st"><div class="l">Zisterne leer</div><div class="v"><ftui-label [text]="DOIF_Bewaesserung:dbg_zisterne_leer"></ftui-label></div></div>
+      <div class="st"><div class="l">Auto zuletzt</div><div class="v"><ftui-label [text]="DOIF_Bewaesserung:Bewaesserung_Ende:time | toDate() | format('DD.MM. hh:mm:ss')"></ftui-label></div></div>
+    </div>
+</div>
+</div>
+
+<script>
+function startClock(){
+  var c=document.getElementById('clock');
+  function t(){var d=new Date();
+    c.textContent=('0'+d.getHours()).slice(-2)+':'+
+      ('0'+d.getMinutes()).slice(-2);}
+  t();setInterval(t,10000);
+}
+function initButtons(){
+  document.addEventListener('click',async function(e){
+    var b=e.target.closest('.btn,.sbtn');if(!b)return;
+    var c=b.getAttribute('data-cmd');
+    if(b.hasAttribute('data-ask')&&!confirm(c+' ausführen?'))return;
+    try{
+      var r=await fetch('/fhem?XHR=1');
+      var t=r.headers.get('X-FHEM-csrfToken')||'';
+      var x=await fetch('/fhem?cmd='+encodeURIComponent(c)+'&XHR=1&fwcsrf='+t);
+      var m=(await x.text()).trim();
+      b.classList.add(x.ok&&!m?'ok':'err');
+      if(m)console.warn(c,m);
+    }catch(err){b.classList.add('err');}
+    setTimeout(function(){b.classList.remove('ok','err');},1200);
+  });
+}
+function initNav(){
+  var b=document.getElementById('burger');
+  var n=document.getElementById('sidenav');
+  var s=document.getElementById('navshade');
+  function t(){n.classList.toggle('open');s.classList.toggle('open');}
+  b.addEventListener('click',t);s.addEventListener('click',t);
+}
+window.addEventListener('load',function(){
+  initNav();initButtons();startClock();
+  setTimeout(function(){
+    document.dispatchEvent(new Event('ftuiVisibilityChanged'));
+  },2000);
+});
+</script>
+<div class="card" style="margin:14px 3%;padding:0;background:transparent;border:0"><iframe src="steuerung.html?embed=1&nur=zisterne&anlage=g" title="Zisterne" style="width:100%;height:270px;border:0;background:transparent"></iframe></div>
+<script>
+function batIco(v){v=(v||'').trim();var c=v=='NORMAL'?'#4ade80':v=='LOW'?'#f87171':'#64748b',w=v=='NORMAL'?12:v=='LOW'?3:0;return '<svg class="batic" viewBox="0 0 20 10" width="18" height="9" style="vertical-align:middle;margin-left:6px"><title>Batterie '+(v||'unbekannt')+'</title><rect x=".5" y=".5" width="16" height="9" rx="2" fill="none" stroke="'+c+'"/><rect x="17" y="3" width="2" height="4" rx=".6" fill="'+c+'"/><rect x="2" y="2" width="'+w+'" height="6" rx="1" fill="'+c+'"/></svg>';}
+(function(){function up(){[].forEach.call(document.querySelectorAll('.tbat'),function(l){var x=l.nextElementSibling;if(x&&x.classList.contains('batx')){var v=(l.textContent||'').trim();if(x.getAttribute('data-v')!==v){x.setAttribute('data-v',v);x.innerHTML=batIco(v);}}});}
+window.addEventListener('load',function(){up();[].forEach.call(document.querySelectorAll('.tbat'),function(l){new MutationObserver(up).observe(l,{childList:true,subtree:true,characterData:true});});setInterval(up,10000);});})();
+</script>
+<style>
+.tb tr.troom{cursor:pointer}.tb tr.troom:hover td{background:rgba(34,211,238,.06)}
+.tb tr.twarn td:first-child::after{content:" ⚠";color:#fbbf24}.tb tr.terr td:first-child::after{content:" ⛔";color:#f87171}
+.tb tr.terr td{opacity:.55}
+#tdial{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:none;align-items:center;justify-content:center}
+#tdial.open{display:flex}
+#tdial .box{background:linear-gradient(160deg,#141b2b,#0f1522);border:1px solid #26324a;border-radius:18px;padding:16px 18px;width:min(92vw,320px);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+#tdial h4{margin:0 0 2px;color:#22d3ee;font-size:17px}#tdial .sub{color:#8496ab;font-size:12px;margin-bottom:6px}
+#tdial svg{width:240px;height:240px;touch-action:none;user-select:none;max-width:100%}
+#tdial .row{display:flex;gap:8px;justify-content:center;margin-top:6px}
+#tdial button{background:#1a2336;border:1px solid #26324a;color:#e8eef6;border-radius:12px;padding:9px 14px;font-size:15px;font-weight:700;cursor:pointer;min-width:52px}
+#tdial button.pri{background:linear-gradient(180deg,rgba(34,211,238,.45),rgba(34,211,238,.15));border-color:#22d3ee}
+#tdial .msg{min-height:18px;font-size:12px;margin-top:6px;color:#8496ab}
+</style>
+<div id="tdial"><div class="box"><h4 id="td_n">Raum</h4><div class="sub" id="td_s"></div>
+<svg id="td_svg" viewBox="0 0 240 240"></svg>
+<div class="row"><button id="td_m">−</button><button id="td_p">+</button></div>
+<div class="row"><button id="td_x">Abbrechen</button><button class="pri" id="td_ok">Setzen</button></div><div class="msg" id="td_msg"></div></div></div>
+<script>
+(function(){
+var MIN=5,MAX=25,A0=225,AR=270,dev='',val=20,drag=false;
+function pol(a,r){var t=(a-90)*Math.PI/180;return [120+r*Math.cos(t),120+r*Math.sin(t)];}
+function arc(a1,a2,r){var p1=pol(a1,r),p2=pol(a2,r),l=(a2-a1)>180?1:0;return 'M'+p1[0].toFixed(1)+' '+p1[1].toFixed(1)+' A'+r+' '+r+' 0 '+l+' 1 '+p2[0].toFixed(1)+' '+p2[1].toFixed(1);}
+function col(v){return v<18?'#60a5fa':v<21?'#4ade80':v<23?'#fbbf24':'#f87171';}
+function draw(){var f=(val-MIN)/(MAX-MIN),a=A0+AR*f,k=pol(a,96),c=col(val);
+  document.getElementById('td_svg').innerHTML='<path d="'+arc(A0,A0+AR,96)+'" stroke="#1b2437" stroke-width="16" fill="none" stroke-linecap="round"/>'+
+   (f>0.001?'<path d="'+arc(A0,a,96)+'" stroke="'+c+'" stroke-width="16" fill="none" stroke-linecap="round"/>':'')+
+   '<circle cx="'+k[0].toFixed(1)+'" cy="'+k[1].toFixed(1)+'" r="14" fill="#e8eef6" stroke="'+c+'" stroke-width="4"/>'+
+   '<text x="120" y="128" text-anchor="middle" fill="#e8eef6" font-size="44" font-weight="800">'+val.toFixed(1).replace('.',',')+'</text>'+
+   '<text x="120" y="152" text-anchor="middle" fill="#8496ab" font-size="13">°C Soll</text>'+
+   '<text x="'+pol(A0,96)[0]+'" y="'+(pol(A0,96)[1]+26)+'" text-anchor="middle" fill="#64748b" font-size="11">'+MIN+'°</text>'+
+   '<text x="'+pol(A0+AR,96)[0]+'" y="'+(pol(A0+AR,96)[1]+26)+'" text-anchor="middle" fill="#64748b" font-size="11">'+MAX+'°</text>';}
+function setV(v){val=Math.max(MIN,Math.min(MAX,Math.round(v*2)/2));draw();}
+function fromEv(e){var r=document.getElementById('td_svg').getBoundingClientRect(),x=(e.clientX-r.left)/r.width*240-120,y=(e.clientY-r.top)/r.height*240-120;
+  var a=Math.atan2(y,x)*180/Math.PI+90;if(a<0)a+=360;var d=a-A0;if(d<0)d+=360;if(d>AR){d=(d-AR<(360-AR)/2)?AR:0;}setV(MIN+(MAX-MIN)*d/AR);}
+function open(tr){dev=tr.getAttribute('data-dev');var tds=tr.querySelectorAll('td'),so=parseFloat(String(tds[2]&&tds[2].textContent||'').replace(',','.'));
+  document.getElementById('td_n').textContent=tds[0].childNodes[0].nodeValue.trim();
+  document.getElementById('td_s').textContent='Ist '+(tds[1]?tds[1].textContent.trim():'–')+' °C · aktuell Soll '+(isNaN(so)?'–':so);
+  document.getElementById('td_msg').textContent='';setV(isNaN(so)?20:so);document.getElementById('tdial').classList.add('open');}
+function close(){document.getElementById('tdial').classList.remove('open');}
+async function send(){var m=document.getElementById('td_msg'),c='set '+dev+' desiredTemp '+val.toFixed(1);m.style.color='#8496ab';m.textContent='sende …';
+  try{var r=await fetch('/fhem?XHR=1',{cache:'no-store'});var t=r.headers.get('X-FHEM-csrfToken')||'';
+    var x=await fetch('/fhem?cmd='+encodeURIComponent(c)+'&XHR=1&fwcsrf='+encodeURIComponent(t),{cache:'no-store'});var tx=(await x.text()).trim();
+    if(x.ok&&!tx){m.style.color='#4ade80';m.textContent='gesetzt: '+val.toFixed(1)+' °C';setTimeout(close,900);}else{m.style.color='#f87171';m.textContent='Fehler: '+(tx||x.status);}}
+  catch(err){m.style.color='#f87171';m.textContent='Fehler: '+err;}}
+function mark(){[].forEach.call(document.querySelectorAll('.tb tr'),function(tr){var k=tr.querySelector('.tkomm'),b=tr.querySelector('.tbat');if(!b)return;
+  if(!tr.getAttribute('data-dev')){var m=(b.getAttribute('[text]')||'').match(/^(Tado_EG_\w+):/);if(m){tr.setAttribute('data-dev',m[1]);tr.classList.add('troom');}}
+  var v=k?(k.textContent||'').trim():'';tr.classList.toggle('twarn',v=='WARNUNG');tr.classList.toggle('terr',v=='FEHLER');tr.title=v&&v!='OK'?'Kommunikation: '+v:'';});}
+document.addEventListener('click',function(e){var tr=e.target.closest&&e.target.closest('tr.troom');if(tr){open(tr);}});
+window.addEventListener('load',function(){mark();setInterval(mark,10000);var s=document.getElementById('td_svg');
+  s.addEventListener('pointerdown',function(e){drag=true;try{s.setPointerCapture(e.pointerId);}catch(x){}fromEv(e);});
+  s.addEventListener('pointermove',function(e){if(drag)fromEv(e);});s.addEventListener('pointerup',function(){drag=false;});s.addEventListener('pointercancel',function(){drag=false;});
+  document.getElementById('td_m').onclick=function(){setV(val-0.5);};document.getElementById('td_p').onclick=function(){setV(val+0.5);};
+  document.getElementById('td_x').onclick=close;document.getElementById('td_ok').onclick=send;
+  document.getElementById('tdial').addEventListener('click',function(e){if(e.target.id=='tdial')close();});});
+})();
+</script>
+<script src="ue-arrange.js?v=13"></script>
+</body>
+</html>

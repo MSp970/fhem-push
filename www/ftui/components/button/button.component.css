@@ -1,0 +1,149 @@
+:host {
+  display: flex;
+  --border-radius: 10px;
+  --border-width: 0;
+  --border-style: solid;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 1em;
+  --padding-end: 1em;
+  --transition: background-color, opacity 100ms linear;
+  letter-spacing: -.025em;
+  cursor: pointer;
+  border-color: var(--color-base, #20639b);
+  background: transparent;
+  color: var(--color-base, #20639b);
+  --button-height: 2.5em;
+  height: var(--button-height);
+  min-height: var(--button-height);
+  width: var(--button-width);
+  min-width: var(--button-width);
+  --button-inner-background: transparent;
+  --button-inner-color: var(--color-base, #20639b);
+  --button-inner-shadow: none;
+}
+
+/* size */
+
+:host([size="small"]) {
+  --border-radius: 6px;
+  --padding-top: 0;
+  --padding-start: 0.9em;
+  --padding-end: 0.9em;
+  --padding-bottom: 0;
+  --button-height: 2em;
+  font-size: 0.9em;
+}
+
+:host([size="large"]) {
+  --border-radius: 12px;
+  --padding-top: 0;
+  --padding-start: 1em;
+  --padding-end: 1em;
+  --padding-bottom: 0;
+  --button-height: 2.8em;
+  font-size: 1.5em;
+}
+
+:host([size="huge"]) {
+  --border-radius: 18px;
+  --padding-top: 0;
+  --padding-start: 1em;
+  --padding-end: 1em;
+  --padding-bottom: 0;
+  --button-height: 3em;
+  font-size: 2em;
+}
+
+/* fill */
+
+:host([fill="outline"]) {
+  --border-radius: 10px;
+  --border-width: 2px;
+  --border-style: solid;
+  --border-color: var(--color-base);
+  --button-inner-background: transparent;
+  --button-inner-color: var(--color-base);
+}
+
+/* shape */
+
+:host([shape="round"]) {
+  --border-radius: 3em;
+  --padding-top: 0;
+  --padding-start: 1em;
+  --padding-end: 1em;
+  --padding-bottom: 0;
+}
+
+:host([shape="circle"]) {
+  --border-radius: 3em;
+  --padding-top: 0;
+  --padding-start: 0em;
+  --padding-end: 0em;
+  --padding-bottom: 0;
+  width: 3em;
+  --button-height: 3em;
+}
+
+:host([fill="solid"]) .button-inner {
+  background: var(--button-solid-background, var(--color-base));
+  color: var(--button-solid-color, var(--color-contrast));
+}
+
+/* direction */
+:host([direction="vertical"]) .button-inner {
+  flex-direction: column;
+}
+
+:host(.activated) .button-inner {
+  --color-base: var(--color-active);
+  background: var(--button-active-background, var(--button-inner-background));
+  opacity: var(--button-active-opacity, 1);
+}
+
+:host([fill="none"].activated) .button-inner {
+  animation: glow 500ms infinite;
+}
+
+@keyframes glow {
+  0% {
+    background-color:rgba(140,140,140,0.3);
+    box-shadow: 0 0 5px rgba(140,140,140,0.3);
+  }
+  50% {
+    background-color: rgba(140,140,140,0.5);
+    box-shadow: 0 0 20px rgba(140,140,140,0.5);
+  }
+  100% {
+    background-color: rgba(140,140,140,1);
+    box-shadow: 0 0 5px rgba(140,140,140,1);
+  }
+}
+
+:host .button-inner {
+  transition: background-color 0.2s ease-out;
+  box-sizing: border-box;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: space-evenly;
+  width: 100%;
+  height: 100%;
+  min-height: var(--button-height);
+  border-radius: var(--border-radius);
+  padding-left: unset;
+  padding-right: unset;
+  padding-inline-start: var(--padding-start);
+  padding-inline-end: var(--padding-end);
+  border-width: var(--border-width);
+  border-style: var(--border-style);
+  border-color: var(--border-color);
+  background: var(--button-inner-background);
+  color: var(--button-inner-color);
+  box-shadow: var(--button-inner-shadow);
+}
+
+/* ::slotted(ftui-icon) {
+  font-size: 0.75em;
+} */

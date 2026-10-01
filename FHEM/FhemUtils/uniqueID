@@ -1,0 +1,7 @@
+# This file is auto generated.
+# Please do not modify, move or delete it.
+
+uniqueID:c23be162e3921704cd0816883d680e4e
+openwb_mqtt:fhem_masp:openWB/simpleAPI/set/chargepoint/2/chargecurrent:
+alexaFHEM.bearerToken:crypt:560553747a0754717c0f057508715c5a
+alexaFHEM.skillRegKey:crypt:240456067c06571e0c7c72017e76542176737104007c05551f05005326710353277052037c06250b01

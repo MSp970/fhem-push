@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="ftui.js"></script>
+  <link href="ftui.css" rel="stylesheet">
+  <link href="themes/ftui-theme.css" rel="stylesheet">
+  <link href="favicon.ico" rel="icon" type="image/x-icon" />
+  <meta name="viewport" content="width=device-width">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="toast_position" content="topLeft">
+  <meta name="debug" content="0">
+  <title>Energie - Tagesverbrauch</title>
+</head>
+<body>
+  <ftui-grid base-width="78" base-height="78" margin="5" shape="round">
+    <ftui-grid-tile row="1" col="1" height="4" width="8" shape="round">
+      <ftui-label>Tagesverbrauch EG (PV / Netz / Batterie)</ftui-label>
+      <ftui-chart type="bar" unit="month" width="100%" height="260px" y-min="0" stacked-y>
+        <ftui-chart-data type="bar" stack="s" label="PV" log="FileLog_Energie_Archiv" spec="4:Energie_Archiv.Tag_EG_PV" background-color="#3fae4a" border-color="#3fae4a"></ftui-chart-data>
+        <ftui-chart-data type="bar" stack="s" label="Netz" log="FileLog_Energie_Archiv" spec="4:Energie_Archiv.Tag_EG_EVU" background-color="#e04b4b" border-color="#e04b4b"></ftui-chart-data>
+        <ftui-chart-data type="bar" stack="s" label="Batterie" log="FileLog_Energie_Archiv" spec="4:Energie_Archiv.Tag_EG_Batterie" background-color="#f0a030" border-color="#f0a030"></ftui-chart-data>
+      </ftui-chart>
+    </ftui-grid-tile>
+    <ftui-grid-tile row="5" col="1" height="4" width="8" shape="round">
+      <ftui-label>Tagesverbrauch OG (PV / Netz / Batterie)</ftui-label>
+      <ftui-chart type="bar" unit="month" width="100%" height="260px" y-min="0" stacked-y>
+        <ftui-chart-data type="bar" stack="s" label="PV" log="FileLog_Energie_Archiv" spec="4:Energie_Archiv.Tag_OG_PV" background-color="#3fae4a" border-color="#3fae4a"></ftui-chart-data>
+        <ftui-chart-data type="bar" stack="s" label="Netz" log="FileLog_Energie_Archiv" spec="4:Energie_Archiv.Tag_OG_EVU" background-color="#e04b4b" border-color="#e04b4b"></ftui-chart-data>
+        <ftui-chart-data type="bar" stack="s" label="Batterie" log="FileLog_Energie_Archiv" spec="4:Energie_Archiv.Tag_OG_Batterie" background-color="#f0a030" border-color="#f0a030"></ftui-chart-data>
+      </ftui-chart>
+    </ftui-grid-tile>
+    <ftui-grid-tile row="9" col="1" height="4" width="8" shape="round">
+      <ftui-label>Tagesverbrauch Allgemein (PV / Netz / Batterie)</ftui-label>
+      <ftui-chart type="bar" unit="month" width="100%" height="260px" y-min="0" stacked-y>
+        <ftui-chart-data type="bar" stack="s" label="PV" log="FileLog_Energie_Archiv" spec="4:Energie_Archiv.Tag_Allg_PV" background-color="#3fae4a" border-color="#3fae4a"></ftui-chart-data>
+        <ftui-chart-data type="bar" stack="s" label="Netz" log="FileLog_Energie_Archiv" spec="4:Energie_Archiv.Tag_Allg_EVU" background-color="#e04b4b" border-color="#e04b4b"></ftui-chart-data>
+        <ftui-chart-data type="bar" stack="s" label="Batterie" log="FileLog_Energie_Archiv" spec="4:Energie_Archiv.Tag_Allg_Batterie" background-color="#f0a030" border-color="#f0a030"></ftui-chart-data>
+      </ftui-chart>
+    </ftui-grid-tile>
+    <ftui-grid-tile row="13" col="1" height="4" width="8" shape="round">
+      <ftui-label>Tagesverbrauch Waermepumpe (PV / Netz / Batterie)</ftui-label>
+      <ftui-chart type="bar" unit="month" width="100%" height="260px" y-min="0" stacked-y>
+        <ftui-chart-data type="bar" stack="s" label="PV" log="FileLog_Energie_Archiv" spec="4:Energie_Archiv.Tag_HP_PV" background-color="#3fae4a" border-color="#3fae4a"></ftui-chart-data>
+        <ftui-chart-data type="bar" stack="s" label="Netz" log="FileLog_Energie_Archiv" spec="4:Energie_Archiv.Tag_HP_EVU" background-color="#e04b4b" border-color="#e04b4b"></ftui-chart-data>
+        <ftui-chart-data type="bar" stack="s" label="Batterie" log="FileLog_Energie_Archiv" spec="4:Energie_Archiv.Tag_HP_Batterie" background-color="#f0a030" border-color="#f0a030"></ftui-chart-data>
+      </ftui-chart>
+    </ftui-grid-tile>
+    <ftui-grid-tile row="17" col="1" height="4" width="8" shape="round">
+      <ftui-label>N-ergie Netzbezug / Einspeisung</ftui-label>
+      <ftui-chart type="bar" unit="month" width="100%" height="260px" y-min="0" stacked-y>
+        <ftui-chart-data type="bar" stack="s" label="Einspeisung" log="FileLog_Energie_Archiv" spec="4:Energie_Archiv.Tag_Einsp" background-color="#3fae4a" border-color="#3fae4a"></ftui-chart-data>
+        <ftui-chart-data type="bar" stack="s" label="Netzbezug" log="FileLog_Energie_Archiv" spec="4:Energie_Archiv.Tag_Bezug" background-color="#e04b4b" border-color="#e04b4b"></ftui-chart-data>
+      </ftui-chart>
+    </ftui-grid-tile>
+    <ftui-grid-tile row="21" col="1" height="4" width="8" shape="round">
+      <ftui-label>PV-Erzeugung gesamt (Tag)</ftui-label>
+      <ftui-chart type="bar" unit="month" width="100%" height="260px" y-min="0" stacked-y>
+        <ftui-chart-data type="bar" stack="s" label="PV-Erzeugung" log="FileLog_Energie_Archiv" spec="4:Energie_Archiv.Tag_PV_Erzeugung" background-color="#e8c020" border-color="#e8c020"></ftui-chart-data>
+      </ftui-chart>
+    </ftui-grid-tile>
+  </ftui-grid>
+  <script>
+    // ------------------------------------------------------------------
+    // Workaround fuer FTUI-3.0-Bug in diesem Build:
+    //  1) startDate/endDate der Chart-Daten muessen echte Date-Objekte sein,
+    //     sonst kollabiert die gesamte Reihe auf einen einzigen Punkt.
+    //  2) unit="month" begrenzt die X-Achse auf einen Monat -> Achse manuell
+    //     auf den vollen Bereich setzen.
+    //  3) FTUI holt Reihen periodisch mit dem Default-Monat nach und ueberschreibt
+    //     dabei Daten UND Achse. Deshalb laeuft ein DAUERHAFTER Watchdog, der bei
+    //     zu wenigen Punkten neu laedt und die Achse bei jedem Zyklus neu fixiert.
+    // ------------------------------------------------------------------
+    (function(){
+      var MONTHS_BACK  = 4;    // gleitendes Fenster: aktueller Monat + 4 Monate zurueck
+      var MIN_POINTS   = 40;   // Schwelle: darunter gilt eine Reihe als "nur aktueller Monat"
+      var INTERVAL_MS  = 2000; // Watchdog-Takt
+      function getRange(){
+        var end = new Date(); end.setHours(0,0,0,0); end.setDate(end.getDate()+1);
+        var start = new Date(end.getTime()); start.setMonth(start.getMonth()-MONTHS_BACK); start.setDate(1); start.setHours(0,0,0,0);
+        return { start:start.getTime(), end:end.getTime() };
+      }
+      var busy = false;
+      function tick(){
+        if(busy) return; busy = true;
+        var r = getRange();
+        var chain = Promise.resolve();
+        document.querySelectorAll('ftui-chart').forEach(function(c){
+          c.querySelectorAll('ftui-chart-data').forEach(function(d){
+            if((d.data || []).length < MIN_POINTS){
+              chain = chain.then(function(){
+                d.startDate = new Date(r.start);
+                d.endDate   = new Date(r.end);
+                try{ var p = d.fetch(); return (p && p.then) ? p : null; }catch(e){ return null; }
+              });
+            }
+          });
+        });
+        chain.then(function(){
+          document.querySelectorAll('ftui-chart').forEach(function(c){
+            var cjs = c.chart;
+            if(cjs && cjs.options && cjs.options.scales && cjs.options.scales.x){
+              cjs.options.scales.x.min = r.start;
+              cjs.options.scales.x.max = r.end;
+              cjs.update('none');
+            }
+          });
+          busy = false;
+        }, function(){ busy = false; });
+      }
+      window.addEventListener('load', function(){ setTimeout(function(){ setInterval(tick, INTERVAL_MS); }, 2000); });
+    })();
+  </script>
+</body>
+</html>

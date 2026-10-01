@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <!--
+    /* FHEM tablet ui - FTUI */
+    /**
+    * UI builder framework for FHEM
+    *
+    * Version: 3.0.0
+    *
+    * Copyright (c) 2020-2024 Mario Stephan <mstephan@shared-files.de>
+    * Under MIT License (http://www.opensource.org/licenses/mit-license.php)
+    * https://github.com/knowthelist/ftui
+    */
+    -->
+  <base href="../" />
+  <script src="ftui.js"></script>
+  <link href="ftui.css" rel="stylesheet">
+  <link href="themes/ftui-theme.css" rel="stylesheet">
+  <link href="favicon.ico" rel="icon" type="image/x-icon" />
+
+
+  <title>FTUI Example Colorpicker</title>
+</head>
+
+<body>
+
+  <ftui-grid base-width="250" base-height="250">
+
+    <ftui-grid-tile row="1" col="1" height="1" width="1">
+      <ftui-grid-header>DEFAULT</ftui-grid-header>
+
+        <ftui-colorpicker></ftui-colorpicker>
+      
+    </ftui-grid-tile>
+
+    <ftui-grid-tile row="1" col="2" height="1" width="1">
+      <ftui-grid-header>BINDING</ftui-grid-header>
+
+        <ftui-colorpicker [hex]="ftuitest:rgb" (hex)="setreading ftuitest:rgb"></ftui-colorpicker>
+
+    </ftui-grid-tile>
+
+    <ftui-grid-tile row="1" col="3" height="1" width="1">
+      <ftui-grid-header>HUE-DEVICE</ftui-grid-header>
+
+        <ftui-colorpicker [hex]="HUEDevice20:rgb" (hex)="replace('#','') | HUEDevice20:rgb"
+                          layout="wheel,valueSlider"></ftui-colorpicker>
+      
+    </ftui-grid-tile>
+
+    <ftui-grid-tile row="1" col="4" height="1" width="1">
+      <ftui-grid-header>CHANGE EVENT</ftui-grid-header>
+
+        <ftui-colorpicker @color-change="console.log($event.detail.hexString)"></ftui-colorpicker>
+
+    </ftui-grid-tile>
+
+    <ftui-grid-tile row="2" col="1" height="1" width="1">
+      <ftui-grid-header>RGB-SLIDER</ftui-grid-header>
+      <ftui-row>
+
+        <ftui-column width="10%" height="70%"><span>R</span><span>G</span><span>B</span></ftui-column>
+        <ftui-colorpicker [hex]="HUEDevice20:rgb" (hex)="replace('#','') | HUEDevice20:rgb" 
+                      layout="redSlider, greenSlider, blueSlider"></ftui-colorpicker>
+
+      </ftui-row>
+    </ftui-grid-tile>
+
+    <ftui-grid-tile row="2" col="2" height="1" width="1">
+      <ftui-grid-header>HORIZONTAL</ftui-grid-header>
+      
+        <ftui-colorpicker direction="horizontal" layout="hueSlider, valueSlider"
+        [hex]="HUEDevice20:rgb" (hex)="replace('#','') | HUEDevice20:rgb"></ftui-colorpicker>
+    </ftui-grid-tile>
+
+
+    <ftui-grid-tile row="2" col="3" height="1" width="1">
+      <ftui-grid-header>SAT/BRI/HUE</ftui-grid-header>
+      
+        <ftui-colorpicker direction="horizontal" layout="hueSlider,saturationSlider,valueSlider"
+                [hue]="HUEDevice20:hue | divide(182.0425) | toInt() | "
+                [saturation]="HUEDevice20:sat | divide(2.55) | toInt()"
+                [brightness]="HUEDevice20:bri | divide(2.55) | toInt()"
+                (hue)="multiply(182.0425) | toInt() | HUEDevice20:hue"
+                (saturation)="multiply(2.55) | toInt() | HUEDevice20:sat"
+                (brightness)="multiply(2.55) | toInt() | HUEDevice20:bri">
+        </ftui-colorpicker>
+    </ftui-grid-tile>
+
+    <ftui-grid-tile row="3" col="1" height="1" width="1">
+      <ftui-grid-header>WHEEL</ftui-grid-header>
+        <ftui-colorpicker layout="wheel"></ftui-colorpicker>
+    </ftui-grid-tile>
+
+    <ftui-grid-tile row="3" col="2" height="1" width="1">
+      <ftui-grid-header>BOX</ftui-grid-header>
+        <ftui-colorpicker layout="box"></ftui-colorpicker>
+    </ftui-grid-tile>
+
+    <ftui-grid-tile row="3" col="3" height="1" width="1">
+      <ftui-grid-header>SLIDER</ftui-grid-header>
+        <ftui-colorpicker layout="hueSlider"></ftui-colorpicker>
+    </ftui-grid-tile>
+
+      <ftui-grid-tile row="2" col="4" height="1" width="1">
+        <ftui-grid-header>KELVIN</ftui-grid-header>
+          <ftui-colorpicker layout="kelvinSlider" 
+          (kelvin)="scale(2200,11000,454,154) | toInt() |  Stehlampe:ct"
+          [kelvin]="Stehlampe:ct | toInt() | scale(154,454,11000,2200)"></ftui-colorpicker>
+      </ftui-grid-tile>
+    
+      <ftui-grid-tile row="3" col="4" height="2" width="2">
+        <ftui-grid-header>400x400 HUE Color-Picker</ftui-grid-header>
+        <ftui-colorpicker width="400" layout="box,hueSlider"></ftui-colorpicker>
+      </ftui-grid-tile>
+      
+
+  </ftui-grid>
+
+</body>
+
+</html>

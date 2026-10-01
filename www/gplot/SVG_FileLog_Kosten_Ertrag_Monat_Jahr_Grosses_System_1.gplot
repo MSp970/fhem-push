@@ -1,0 +1,22 @@
+# Created by FHEM/98_SVG.pm, 2026-08-14 19:45:21
+set terminal png transparent size <SIZE> crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'Kosten & Ertrag – Monats- und Jahreswerte – Großes System'
+set ytics 
+set y2tics 
+set grid
+set ylabel "EUR"
+set y2label "EUR"
+
+#FileLog_Kosten_Ertrag_Monat_Jahr_Grosses_System 4:HA_SDM630M_Allgemein.statKWh_costs_N_ErgieMonth\x3a::
+#FileLog_Kosten_Ertrag_Monat_Jahr_Grosses_System 4:HA_SDM630M_Allgemein.statKWh_earning_N_ErgieMonth\x3a::
+#FileLog_Kosten_Ertrag_Monat_Jahr_Grosses_System 4:HA_SDM630M_Allgemein.statKWh_costs_N_ErgieYear\x3a::
+#FileLog_Kosten_Ertrag_Monat_Jahr_Grosses_System 4:HA_SDM630M_Allgemein.statKWh_earning_N_ErgieYear\x3a::
+
+plot "<IN>" using 1:2 axes x1y1 title 'kWh Kosten Monat (EUR)' ls l0 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'kWh Ertrag Monat (EUR)' ls l1 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'kWh Kosten Jahr (EUR)' ls l2 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'kWh Ertrag Jahr (EUR)' ls l3 lw 1 with lines

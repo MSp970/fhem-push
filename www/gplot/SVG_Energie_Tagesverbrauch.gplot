@@ -1,0 +1,18 @@
+# Created by FHEM/98_SVG.pm, 2026-08-06 08:39:08
+set terminal png transparent size <SIZE> crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'Tagesbedarf Energie'
+set ytics 
+set y2tics 
+set grid
+set ylabel "kWh"
+set y2label "kWh"
+
+#FileLog_Energie_Archiv 4:Energie_Archiv.Tag_EG_PV\x3a::
+#FileLog_Energie_Archiv 4:Energie_Archiv.Tag_EG_EVU\x3a::
+
+plot "<IN>" using 1:2 axes x1y2 title 'EG_PV' ls l1 lw 1 with bars,\
+     "<IN>" using 1:2 axes x1y1 title 'EG_EVU' ls l0 lw 1 with bars

@@ -1,0 +1,35 @@
+# Created by FHEM/98_SVG.pm, 2023-12-06 17:04:21
+2
+set terminal png transparent size <SIZE> crop
+3
+set output '<OUT>.png'
+4
+set xdata time
+5
+set timefmt "%Y-%m-%d_%H:%M:%S"
+6
+set xlabel " "
+7
+set title 'Heizventilstellungen'
+8
+set ytics 
+9
+set y2tics 
+10
+set grid
+11
+set ylabel "%"
+12
+set y2label "%"
+13
+set yrange [0:100]
+14
+set y2range [0:100]
+15
+?
+16
+#FileLog_Heizkreise 4:Heizventilstellung_Bad.getG1\x3a::
+17
+?
+18
+plot "<IN>" using 1:2 axes x1y1 title 'Bad' ls l0 lw 1 with lines

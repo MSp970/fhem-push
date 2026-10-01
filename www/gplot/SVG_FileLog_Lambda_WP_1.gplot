@@ -1,0 +1,40 @@
+# Created by FHEM/98_SVG.pm, 2026-02-03 17:57:28
+set terminal png transparent size <SIZE> crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'Lambda Messwerte'
+set ytics 
+set y2tics 
+set grid ytics y2tics
+set ylabel "°C"
+set y2label "Watt_COP"
+set yrange [20:70]
+set y2range [0:10]
+
+#FileLog_Lambda_WP 4:LambdaWP.BoilerLowTemp\x3a::
+#FileLog_Lambda_WP 4:LambdaWP.BoilerHighTemp\x3a::
+#FileLog_Lambda_WP 4:LambdaWP.HC_FlowTemp\x3a::
+#FileLog_Lambda_WP 4:LambdaWP.HP_Vorlauftemp\x3a::
+#FileLog_Lambda_WP 4:LambdaWP.HP_Ruecklauftemp\x3a::
+#FileLog_Lambda_WP 4:LambdaWP.HP_COP\x3a::
+#FileLog_Lambda_WP 4:LambdaWP.HP_akt_Waermeabgabeleistung\x3a::
+#FileLog_Lambda_WP 4:LambdaWP.HP_akt_elektr_Leistungsaufnahme\x3a::
+#FileLog_Lambda_WP 4:LambdaWP.HP_Kompressor_Auslastung\x3a::$fld[3]=$fld[3]/10
+#FileLog_Lambda_WP 4:LambdaWP.BufferHighTemp\x3a::
+#FileLog_Lambda_WP 4:LambdaWP.HC_Target_temp_flow_line\x3a::
+#FileLog_Lambda_WP 4:LambdaWP.HP_WA_Volumen_m3_h\x3a::
+
+plot "<IN>" using 1:2 axes x1y1 title 'WW unten' ls l2 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'WW oben' ls l0 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'HC Vorlauf' ls l1 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'HP Vorlauf' ls l3 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'HP Rücklauf' ls l4 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'COP' ls l5 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Wärmeleistung' ls l6 lw 1 with steps,\
+     "<IN>" using 1:2 axes x1y2 title 'El. Leistung' ls l7 lw 1 with steps,\
+     "<IN>" using 1:2 axes x1y2 title 'Kompressor' ls l8 lw 2.5 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'Puffer' ls l0 lw 2 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'HC Solltemp' ls l2 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'HLPVol' ls l1 lw 1 with lines

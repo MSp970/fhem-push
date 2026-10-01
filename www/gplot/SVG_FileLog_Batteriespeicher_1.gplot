@@ -1,0 +1,35 @@
+# Created by FHEM/98_SVG.pm, 2026-04-22 13:40:52
+set terminal png transparent size <SIZE> crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'Batteriespeicher'
+set ytics 
+set y2tics 
+set grid
+set ylabel "Percent"
+set y2label "Watt/Amp"
+set yrange [0:100]
+
+#FileLog_Batteriespeicher 4:GoodWe_Haus_Ost_Mitte_5876.SOC\x3a::
+#FileLog_Batteriespeicher 4:GoodWe_Garage_Haus_West_5877.Battery1_Current\x3a::
+#FileLog_Batteriespeicher 4:GoodWe_Garage_Haus_West_5877.Battery1_Voltage\x3a::
+#FileLog_Batteriespeicher 4:GoodWe_Haus_Ost_Mitte_5876.Battery1_Current\x3a::
+#FileLog_Batteriespeicher 4:GoodWe_Haus_Ost_Mitte_5876.Battery1_Voltage\x3a::
+#FileLog_Batteriespeicher 4:GoodWe_Haus_Ost_Mitte_5876.Entladeleistung\x3a::
+#FileLog_Batteriespeicher 4:GoodWe_Garage_Haus_West_5877.Entladeleistung\x3a::
+#FileLog_Batteriespeicher 4:GoodWe_Garage_Haus_West_5877.SOC\x3a::
+#FileLog_Batteriespeicher 4:GoodWe_Garage_Haus_West_5877.Ladeleistung\x3a::
+#FileLog_Batteriespeicher 4:GoodWe_Haus_Ost_Mitte_5876.Ladeleistung\x3a::
+
+plot "<IN>" using 1:2 axes x1y1 title 'SOC 10' ls l0 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Current 16' ls l1 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Voltage 16' ls l2 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Current 10' ls l3 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Voltage 10' ls l4 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Entlade Power 10' ls l6 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Entlade Power 16' ls l7 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'SOC 16' ls l0 lw 2 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Lade Power 16' ls l1 lw 2 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Lade Power 10' ls l0 lw 1 with lines

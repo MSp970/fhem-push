@@ -1,0 +1,17 @@
+# Created by FHEM/98_SVG.pm, 2025-03-31 08:26:10
+set terminal png transparent size <SIZE> crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'Energie und Leistung Haus/Tag'
+set ytics 
+set y2tics 
+set grid ytics y2tics
+set ylabel "kWh"
+set y2label "Watt"
+set y2range [0:800]
+
+#DOIFtoolsLog 2:Heizanforderungen.*::
+
+plot "<IN>" using 1:2 axes x1y2 title 'PV Leistung' ls l0 lw 1 with lines

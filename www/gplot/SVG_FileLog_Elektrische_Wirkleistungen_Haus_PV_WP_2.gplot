@@ -1,0 +1,24 @@
+# Created by FHEM/98_SVG.pm, 2025-07-28 11:28:30
+set terminal png transparent size <SIZE> crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'DC PV-Werte'
+set ytics 
+set y2tics 
+set grid
+set ylabel "Volt"
+set y2label "Ampere"
+set yrange [0:800]
+set y2range [0:16]
+
+#FileLog_Elektrische_Daten_WR_5877_Haus_Garage_Suedwest 4:GoodWe_Garage_Haus_West.PV_1_Voltage\x3a::
+#FileLog_Elektrische_Daten_WR_5877_Haus_Garage_Suedwest 4:GoodWe_Garage_Haus_West.PV_2_Voltage\x3a::
+#FileLog_Elektrische_Daten_WR_5877_Haus_Garage_Suedwest 4:GoodWe_Garage_Haus_West.PV_1_Current\x3a::
+#FileLog_Elektrische_Daten_WR_5877_Haus_Garage_Suedwest 4:GoodWe_Garage_Haus_West.PV_2_Current\x3a::
+
+plot "<IN>" using 1:2 axes x1y1 title 'DC Voltage Garage_Sued' ls l1 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'DC Voltage Garage_Nord' ls l2 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'DC Current Garage_Sued' ls l3 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'DC Current Garage_Nord' ls l4 lw 1 with lines

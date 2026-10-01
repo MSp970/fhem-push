@@ -1,0 +1,6 @@
+log/
+cache/
+*.bak
+.git/
+export_*.txt
+export_*.tgz

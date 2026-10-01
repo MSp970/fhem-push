@@ -1,0 +1,1623 @@
+##############################################
+# $Id: myUtilsTemplate.pm 21509 2020-03-25 11:20:51Z rudolfkoenig $
+#
+# Save this file as 99_myUtils.pm, and create your own functions in the new
+# file. They are then available in every Perl expression.
+
+package main;
+
+use strict;
+use warnings;
+use POSIX qw(strftime);
+use JSON;
+
+
+sub garagentor_pos_event {
+  my $DEV = "Garagentor_gross";
+  my $P   = "Garagentor_Position";
+  my $s   = ReadingsVal($DEV,"state","");
+  my $now = time();
+  my $min = 3;
+  my $max = 60;
+  if($s eq "wird_geoeffnet") {
+    fhem("setreading $P fahrt_start $now");
+    fhem("setreading $P richtung auf");
+    garagentor_pos_tick();
+  }
+  elsif($s eq "wird_geschlossen") {
+    fhem("setreading $P fahrt_start $now");
+    fhem("setreading $P richtung zu");
+    garagentor_pos_tick();
+  }
+  elsif($s eq "geoeffnet") {
+    RemoveInternalTimer("grg_pos_tick");
+    my $r  = ReadingsVal($P,"richtung","");
+    my $st = ReadingsNum($P,"fahrt_start",0);
+    if($r eq "auf" and $st > 0) {
+      my $d = $now - $st;
+      if($d >= $min and $d <= $max) {
+        my $a = ReadingsNum($P,"zeit_auf",$d);
+        $a = ($a <= 0) ? $d : ($a*0.7 + $d*0.3);
+        fhem("setreading $P zeit_auf ".sprintf("%.1f",$a));
+        fhem("setreading $P letzte_auf ".sprintf("%.1f",$d));
+      }
+    }
+    fhem("setreading $P prozent 100");
+    fhem("setreading $P richtung -");
+  }
+  elsif($s eq "geschlossen") {
+    RemoveInternalTimer("grg_pos_tick");
+    my $r  = ReadingsVal($P,"richtung","");
+    my $st = ReadingsNum($P,"fahrt_start",0);
+    if($r eq "zu" and $st > 0) {
+      my $d = $now - $st;
+      if($d >= $min and $d <= $max) {
+        my $a = ReadingsNum($P,"zeit_zu",$d);
+        $a = ($a <= 0) ? $d : ($a*0.7 + $d*0.3);
+        fhem("setreading $P zeit_zu ".sprintf("%.1f",$a));
+        fhem("setreading $P letzte_zu ".sprintf("%.1f",$d));
+      }
+    }
+    fhem("setreading $P prozent 0");
+    fhem("setreading $P richtung -");
+  }
+  else {
+    RemoveInternalTimer("grg_pos_tick");
+    fhem("setreading $P richtung -");
+  }
+}
+sub garagentor_pos_tick {
+my $P = "Garagentor_Position";
+my $r = ReadingsVal($P,"richtung","");
+return if($r ne "auf" and $r ne "zu");
+my $st = ReadingsNum($P,"fahrt_start",0);
+return if($st <= 0);
+my $el  = time() - $st;
+my $def = 20;
+if($r eq "auf") {
+my $a = ReadingsNum($P,"zeit_auf",$def);
+$a = $def if($a <= 0);
+my $p = int($el/$a*100 + 0.5);
+$p = 1  if($p < 1);
+$p = 99 if($p > 99);
+fhem("setreading $P prozent $p");
+}
+else {
+my $a = ReadingsNum($P,"zeit_zu",$def);
+$a = $def if($a <= 0);
+my $p = 100 - int($el/$a*100 + 0.5);
+$p = 1  if($p < 1);
+$p = 99 if($p > 99);
+fhem("setreading $P prozent $p");
+}
+InternalTimer(gettimeofday()+1,"garagentor_pos_tick","grg_pos_tick");
+}
+
+sub BackupCheck {
+  my $dir = "/opt/fhem-backup";
+  my $last = 0;
+  for my $f (glob("$dir/FHEM-*.tar.gz")) {
+    my $m = (stat($f))[9] // 0;
+    $last = $m if $m > $last;
+  }
+  my $changed = 0;
+  for my $f ("/opt/fhem/fhem.cfg",
+             glob("/opt/fhem/FHEM/*.pm")) {
+    my $m = (stat($f))[9] // 0;
+    $changed = 1 if $m > $last;
+  }
+  my $old = (time() - $last) > 7*86400;
+
+  system("cp /opt/fhem/fhem.cfg /opt/fhem-cfg-history/ && "
+    . "cd /opt/fhem-cfg-history && "
+    . "git add fhem.cfg && "
+    . "git diff --cached --quiet fhem.cfg || "
+    . "git commit -q -m 'Auto-Save " . localtime() . "'");
+
+  if ($changed || $old) {
+    system("mkdir -p /opt/fhem/restore-info && "
+      . "cp /etc/fstab "
+      . "/usr/local/bin/fhem-backup-sync.sh "
+      . "/usr/local/bin/fhem-backup-notify.sh "
+      . "/opt/fhem/restore-info/ 2>/dev/null");
+    main::Log(1, "BackupCheck: Backup gestartet"
+      . ($changed ? " (Aenderung)" : " (7 Tage)"));
+    my $ts = strftime("%Y%m%d_%H%M%S", localtime());
+    system("nohup nice -n 10 tar czf /opt/fhem-backup/FHEM-$ts.tar.gz -C /opt/fhem --exclude=./log/*.log --exclude=./log/*.gz --exclude=./opt --exclude=./demolog . >/dev/null 2>&1 &");
+  } else {
+    main::Log(1, "BackupCheck: keine Aenderung");
+  }
+}
+
+sub AktienUniversumNamen {
+  my $list = ReadingsVal("Aktien_Universum",
+    "universe_list","");
+  return if ($list eq "");
+  foreach my $isin (split /,/, $list) {
+    $isin =~ s/\s+//g;
+    next if ($isin eq "");
+    next if (ReadingsVal("Aktien_Universum",
+      "n_$isin","") ne "");
+    next if (ReadingsVal("Aktie_$isin",
+      "name","") ne "");
+    my $url = "https://www.tradegatebsx.com/"
+      . "orderbuch.php?isin=$isin";
+    HttpUtils_NonblockingGet({
+      url      => $url,
+      timeout  => 15,
+      isin     => $isin,
+      header   => "User-Agent: Mozilla/5.0"
+        . " (X11; Linux x86_64)",
+      callback => \&AktienUniName_Callback
+    });
+  }
+}
+
+sub AktienUniName_Callback {
+  my ($param, $err, $data) = @_;
+  my $isin = $param->{isin};
+  return if ($err ne "");
+  my ($name) = $data =~ /<h2>([^<]+)<\/h2>/;
+  return if (!$name);
+  readingsSingleUpdate(
+    $defs{"Aktien_Universum"},
+    "n_$isin", $name, 1);
+}
+
+
+
+sub AktienStateIcon {
+  my ($name) = @_;
+  my $s = ReadingsVal($name,
+    "signal","neutral");
+  my %m = (
+    "verkauf" => "rc_GREEN\@lightgreen",
+    "kauf"    => "rc_GREEN\@green",
+    "neutral" => "rc_STOP\@grey"
+  );
+return "<div>"
+    . FW_makeImage($m{$s}
+      // "rc_STOP\@grey", $s, "icon")
+    . " " . InternalVal($name,"STATE","")
+    . "</div>";
+}
+
+
+sub AktienSignalCheck {
+  my ($dev) = @_;
+  return if (!defined $defs{$dev});
+  my $last = ReadingsVal($dev,"last",0);
+  my $kauf = ReadingsVal($dev,
+    "kaufschwelle",0);
+  my $verk = ReadingsVal($dev,
+    "verkaufsschwelle",0);
+  return if ($last <= 0 || $kauf <= 0);
+  my $name = ReadingsVal($dev,"name",$dev);
+  my $today = POSIX::strftime("%Y-%m-%d",
+    localtime(time()));
+  my $neu = "neutral";
+  $neu = "kauf" if ($last < $kauf);
+  $neu = "verkauf"
+    if ($verk > 0 && $last > $verk);
+  my $alt = ReadingsVal($dev,
+    "signal","neutral");
+  return if ($neu eq $alt);
+  readingsSingleUpdate($defs{$dev},
+    "signal", $neu, 1);
+  return if ($neu eq "neutral");
+  my $rd = "signal_${neu}_datum";
+  return if (ReadingsVal($dev,$rd,"")
+    eq $today);
+  my $sig = sprintf("%s-Signal %s: %.3f"
+    . " (Kauf %.3f / Verkauf %.3f)",
+    uc($neu), $name, $last, $kauf, $verk);
+  readingsSingleUpdate($defs{$dev},
+    $rd, $today, 1);
+  readingsSingleUpdate($defs{$dev},
+    "signal_letztes", $sig, 1);
+  Log 2, "AktienSignal: $sig";
+}
+
+
+sub AktienVolaCalc {
+  my $year = POSIX::strftime("%Y",
+    localtime(time()));
+  my $file = "/opt/fhem/log/"
+    . "aktieneod-$year.log";
+  my %hist;
+  if (open(my $fh, "<", $file)) {
+    while (my $z = <$fh>) {
+      if ($z =~ /^(\S+)\s+Aktie_(\S+)\s+eod:
+        \s+\S+\s+\S+\s+\S+\s+(\S+)/x) {
+        push @{$hist{$2}}, $3;
+      }
+    }
+    close $fh;
+  } else {
+    Log 3, "AktienVola: $file fehlt";
+    return;
+  }
+  foreach my $isin (keys %hist) {
+    my $dev = "Aktie_$isin";
+    next if (!defined $defs{$dev});
+    my @c = @{$hist{$isin}};
+    @c = @c[-63..-1] if (@c > 63);
+    next if (@c < 6);
+    my @r;
+    for (my $i = 1; $i < @c; $i++) {
+      next if ($c[$i-1] <= 0 || $c[$i] <= 0);
+      push @r, log($c[$i]/$c[$i-1]);
+    }
+    next if (@r < 5);
+    my $m = 0;
+    $m += $_ for @r;
+    $m /= @r;
+    my $s = 0;
+    $s += ($_-$m)**2 for @r;
+    my $vola = sqrt($s/(@r-1));
+    my @s20 = @c > 20 ? @c[-20..-1] : @c;
+    my $sma = 0;
+    $sma += $_ for @s20;
+    $sma /= @s20;
+    my $k = ReadingsVal($dev,"vola_k",1.0);
+    my $kauf = $sma*(1 - $k*$vola);
+    my $spr = ReadingsVal($dev,
+      "spread_pct",0.1)/100;
+    my $geb = 0.002;
+    my $marge = ReadingsVal($dev,
+      "zielmarge_pct",0.5)/100;
+    my $verk = $kauf*(1+$spr+2*$geb+$marge);
+    readingsBeginUpdate($defs{$dev});
+    readingsBulkUpdate($defs{$dev},
+      "vola_tag_pct",
+      sprintf("%.3f",100*$vola));
+    readingsBulkUpdate($defs{$dev},
+      "sma20", sprintf("%.3f",$sma));
+    readingsBulkUpdate($defs{$dev},
+      "kaufschwelle",
+      sprintf("%.3f",$kauf));
+    readingsBulkUpdate($defs{$dev},
+      "verkaufsschwelle",
+      sprintf("%.3f",$verk));
+    readingsBulkUpdate($defs{$dev},
+      "vola_basis_tage", scalar @c);
+    readingsEndUpdate($defs{$dev}, 1);
+  }
+}
+sub AktienTagesabschluss {
+  my $list = ReadingsVal("Aktien_Config",
+    "isin_list","");
+  return if ($list eq "");
+  foreach my $isin (split /,/, $list) {
+    $isin =~ s/\s+//g;
+    my $dev = "Aktie_$isin";
+    next if (!defined $defs{$dev});
+    my $o = ReadingsVal($dev,"day_open",0);
+    my $h = ReadingsVal($dev,"high",0);
+    my $l = ReadingsVal($dev,"low",0);
+    my $c = ReadingsVal($dev,"last",0);
+    next if ($c == 0);
+    my $eod = sprintf("%.3f %.3f %.3f %.3f",
+      $o, $h, $l, $c);
+    readingsSingleUpdate($defs{$dev},
+      "eod", $eod, 1);
+  }
+}
+sub AktienUniversumScan {
+  my $list = ReadingsVal("Aktien_Universum",
+    "universe_list","");
+  return if ($list eq "");
+  my @isins = grep {$_ ne ""}
+    map {s/\s+//g;; $_} split /,/, $list;
+  %main::AktienScanData = ();
+  $main::AktienScanOpen = scalar @isins;
+  foreach my $isin (@isins) {
+    my $url = "https://www.tradegatebsx.com/"
+      . "refresh.php?isin=$isin";
+    HttpUtils_NonblockingGet({
+      url      => $url,
+      timeout  => 15,
+      isin     => $isin,
+      header   => "User-Agent: Mozilla/5.0"
+        . " (X11; Linux x86_64)",
+      callback => \&AktienScan_Callback
+    });
+  }
+}
+
+sub AktienScan_Callback {
+  my ($param, $err, $data) = @_;
+  my $isin = $param->{isin};
+  $main::AktienScanOpen--;
+  if ($err eq "" && $data =~ /^\s*\{/) {
+    my %v;
+    foreach my $k ("bid","ask","high",
+      "low","close") {
+      ($v{$k}) = $data =~
+        /"$k":\s*"?([\d.,]+)"?/;
+      $v{$k} //= 0;
+      if ($v{$k} =~ /,/) {
+        $v{$k} =~ s/\.//g;
+        $v{$k} =~ s/,/./;
+      }
+      $v{$k} = 0
+        unless ($v{$k} =~ /^-?\d+(\.\d+)?$/);
+      $v{$k} += 0;
+    }
+    if ($v{close} > 0 && $v{high} > 0
+      && $v{low} > 0) {
+      my $vola = 100*($v{high}-$v{low})
+        / $v{close};
+      my $spr = ($v{bid} > 0 && $v{ask} > 0)
+        ? 100*($v{ask}-$v{bid})/$v{bid} : 0;
+      $main::AktienScanData{$isin} = {
+        vola => $vola, spread => $spr };
+    }
+  }
+  AktienScanFinish()
+    if ($main::AktienScanOpen <= 0);
+}
+
+sub AktienScanFinish {
+  my $d = \%main::AktienScanData;
+  my @top = (sort {
+    $d->{$b}{vola} <=> $d->{$a}{vola}
+  } keys %$d)[0..4];
+  my @out;
+  foreach my $isin (@top) {
+    next if (!defined $isin);
+    my $name = ReadingsVal("Aktie_$isin",
+      "name", "");
+    $name = ReadingsVal("Aktien_Universum",
+      "n_$isin", $isin) if ($name eq "");
+    push @out, sprintf("%s %.2f%% (Spread"
+      . " %.2f%%)", $name, $d->{$isin}{vola},
+      $d->{$isin}{spread});
+  }
+  my $hms = POSIX::strftime("%d.%m. %H:%M:%S",
+    localtime(time()));
+  readingsBeginUpdate($defs{"Aktien_Universum"});
+  readingsBulkUpdate($defs{"Aktien_Universum"},
+    "top_volatil", join(" | ", @out));
+  readingsBulkUpdate($defs{"Aktien_Universum"},
+    "scan_hms", $hms);
+  readingsEndUpdate($defs{"Aktien_Universum"}, 1);
+}
+
+
+
+
+sub myUtils_Initialize {
+  return;
+}
+
+sub notify_set_boilerMaxSet {
+  Log3 undef, 2, "🚀 notify_set_boilerMaxSet gestartet";
+
+  my $temp = ReadingsNum("boilermaxset", "targetTemp", undef);
+  if (!defined $temp) {
+    Log3 undef, 1, "❌ targetTemp im Dummy nicht gefunden!";
+    return;
+  }
+
+  my $scaled = int($temp * 10);
+  Log3 undef, 2, "📊 Skalierter Wert: $scaled (Original: ${temp}°C)";
+
+  fhem("set LambdaWP ambientTemp $scaled");
+  Log3 undef, 2, "🔥 Befehl an LambdaWP gesendet: ambientTemp $scaled";
+}
+
+
+sub calc_start_to_target {
+    my ($pv_ref, $need_kwh, $target_hour) = @_;
+
+    return "00:00:00" if(!defined($need_kwh) || $need_kwh <= 0);
+
+    my $house_load      = 1.0;
+    my $max_charge      = 8.0;
+    my $efficiency      = 0.90;
+    my $forecast_factor = 0.90;
+    my $cloud_buffer    = 1.0;
+
+    my $remaining = $need_kwh;
+    my $t = $target_hour * 3600;
+
+    while($t > 0) {
+        my $hour    = int($t / 3600);
+        my $pv_hour = $pv_ref->{$hour} // 0;
+
+        my $usable = $pv_hour - $house_load - $cloud_buffer;
+        $usable = 0 if($usable < 0);
+        $usable = $max_charge if($usable > $max_charge);
+        $usable *= $efficiency;
+        $usable *= $forecast_factor;
+
+        my $pv_per_sec = $usable / 3600;
+
+        if($pv_per_sec <= 0) {
+            $t -= 60;
+            next;
+        }
+
+        my $energy_step = $pv_per_sec * 60;
+
+        if($remaining <= $energy_step) {
+            my $sec_back = int($remaining / $pv_per_sec);
+            $t -= $sec_back;
+            last;
+        }
+
+        $remaining -= $energy_step;
+        $t -= 60;
+    }
+
+    $t = 0 if($t < 0);
+
+    return sprintf("%02d:%02d:%02d",
+        int($t / 3600),
+        int(($t % 3600) / 60),
+        int($t % 60)
+    );
+}
+
+sub SLS_thermik_step {
+  my ($i, $th, $In) = @_;
+  my $abs_i = abs($i);
+  my $heat = 0;
+  if($abs_i > $In) {
+    my $over = ($abs_i / $In) - 1;
+    $heat = $over * $over * 5;
+  }
+  my $cooling_factor = 0.98;
+  $th = $th * $cooling_factor + $heat;
+  $th = 0 if($th < 0);
+  return $th;
+}
+
+sub Bew_fmt_offset {
+  my ($seconds) = @_;
+  return sprintf("+%02d:%02d", int($seconds / 60), $seconds % 60);
+}
+
+
+sub Ladekurve_SVG {
+  my %o = @_;
+  my $fcDev   = $o{fc}       // "DOIF_PV_forecast_Batterie_laden";
+  my $emDev   = $o{em}       // "DOIF_GoodWe_simple";
+  my $ctrl    = $o{ctrl}     // "EMS_Control";
+  my $title   = $o{title}    // "Ladekurve gro\x{00df}e Anlage (2 WR)";
+  my $bats    = $o{bats}     // ["bat1_power","bat2_power"];
+  my $solls   = $o{soll}     // ["p1","p2"];
+  my $socs    = $o{soc}      // [["West","SOC1_5877"],["Ost","SOC2_5876"]];
+  my $socMaxR = $o{socMax}   // ["socMax1","socMax2"];
+  my $maxPowR = $o{maxPower}  // ["maxPower1","maxPower2"];
+  my $capsR   = $o{caps}     // ["capacity1","capacity2"];
+
+  my $cBg   = "#ffffff";
+  my $cBd   = "#cfd4d9";
+  my $cAx   = "#222222";
+  my $cGrid = "#d4d8dd";
+  my $cPlan = "#8fb1d6";
+  my $cPlanS= "#3f6da0";
+  my $cIst  = "#e8833a";
+  my $cIstSt= "#a84915";
+  my $cSoll = "#111111";
+  my $cStart= "#3a3f46";
+  my $cLim  = "#9c2e2a";
+  my $cEn   = "#157a40";
+
+  my $T = sub {
+    my ($x,$y,$fs,$fw,$anc,$str) = @_;
+    my $a = $anc ? " text-anchor=\"$anc\"" : "";
+    return sprintf("<text x=\"%.1f\" y=\"%.1f\" font-size=\"%d\"%s style=\"fill:#000 !important;font-weight:%d\">%s</text>",$x,$y,$fs,$a,$fw,$str);
+  };
+  my $TG = sub {
+    my ($x,$y,$fs,$fw,$anc,$str) = @_;
+    my $a = $anc ? " text-anchor=\"$anc\"" : "";
+    return sprintf("<text x=\"%.1f\" y=\"%.1f\" font-size=\"%d\"%s style=\"fill:%s !important;font-weight:%d\">%s</text>",$x,$y,$fs,$a,$cEn,$fw,$str);
+  };
+  my $nf = sub {
+    my $v = shift;
+    my $s = sprintf("%.1f",$v);
+    $s =~ s/\.0$//;
+    $s =~ s/\./,/;
+    return $s;
+  };
+  my $cl = sub { my $x=shift; my $i=int($x); return ($x>$i)?$i+1:$i; };
+
+  my @curve;
+  for my $h (0..23) { $curve[$h] = ReadingsNum($fcDev, sprintf("charge_curve_%02d",$h), 0); }
+
+  my ($Mi,$H) = (localtime)[1,2];
+  my $nowH = $H + $Mi/60;
+
+  my $modus = ReadingsVal($emDev,"aktiver_modus","?");
+  my %chargeMode = (laden=>1, beide_m1=>1, einzel_laden=>1);
+
+  my $istW = 0;
+  for my $r (@$bats) { my $b = ReadingsNum($emDev,$r,0); $istW += -$b if($b < 0); }
+  my $istKw = $istW/1000;
+
+  my $sollW = 0;
+  if($chargeMode{$modus}) { for my $r (@$solls) { $sollW += ReadingsNum($emDev,$r,0); } }
+  my $sollKw = $sollW/1000;
+
+  my $limW = 0;
+  for my $r (@$maxPowR) { $limW += ReadingsNum($ctrl,$r,3500); }
+  my $limKw = $limW/1000;
+
+  my @zv = map { ReadingsNum($ctrl,$_,0) } @$socMaxR;
+  my @cv;
+  for my $i (0..$#$capsR) { push @cv, ReadingsNum($ctrl,$capsR->[$i],($i==0?10:5)); }
+
+  my ($Enow,$Emax) = (0,0);
+  for my $i (0..$#cv) {
+    my $sv = ReadingsNum($emDev,$socs->[$i][1],0);
+    $Enow += $cv[$i]*$sv/100;
+    $Emax += $cv[$i]*($zv[$i]//0)/100;
+  }
+  my $Eneed = $Emax - $Enow;
+  $Eneed = 0 if($Eneed < 0);
+
+  my @socParts;
+  for my $p (@$socs) {
+    my ($lab,$rd) = @$p;
+    my $v = ReadingsNum($emDev,$rd,0);
+    push @socParts, ($lab ne "" ? "$lab ".int($v)." %" : int($v)." %");
+  }
+  my $socStr = "SOC ".join(" / ",@socParts);
+
+  my $allEq = 1;
+  for (@zv) { $allEq = 0 if($_ != $zv[0]); }
+  my $zielStr;
+  if($allEq) { $zielStr = "Ziel ".int($zv[0])." %"; }
+  else {
+    my @zp;
+    for my $i (0..$#zv) {
+      my $lab = $socs->[$i][0];
+      push @zp, ($lab ne "" ? "$lab ".int($zv[$i])." %" : int($zv[$i])." %");
+    }
+    $zielStr = "Ziel ".join(" / ",@zp);
+  }
+
+  my $fcKwh  = ReadingsNum($fcDev,"forecast_today_kwh",0);
+  my $schl   = ReadingsNum($fcDev,"debug_schlechter_tag",1);
+  my $startS = ReadingsVal($fcDev,"charge_start_time","00:00:00");
+  my ($stH,$stM) = split(":",$startS);
+  my $startH = $stH + $stM/60;
+  my $tag = $schl ? "knapper Tag" : "guter Tag";
+
+  my $S = ($nowH > $startH) ? $nowH : $startH;
+  $S = $nowH if(($stH+0) <= 0);
+
+  my $cumE = sub {
+    my $t = shift;
+    return 0 if($t <= $S);
+    my $acc = 0;
+    for(my $h=int($S); $h<$t && $h<=23; $h++) {
+      my $a = ($h < $S) ? $S : $h;
+      my $b = ($h+1 < $t) ? ($h+1) : $t;
+      $acc += $curve[$h]*($b-$a) if($b > $a);
+    }
+    return ($acc > $Eneed) ? $Eneed : $acc;
+  };
+
+  my $tfull;
+  if($Eneed <= 0.02) { $tfull = $nowH; }
+  else {
+    my $acc = 0;
+    for(my $h=int($S); $h<=23; $h++) {
+      my $a = ($h < $S) ? $S : $h;
+      my $b = $h+1;
+      my $dt = $b - $a;
+      next if($dt <= 0);
+      my $p = $curve[$h];
+      if($p > 0.001 && ($acc + $p*$dt) >= $Eneed) { $tfull = $a + ($Eneed-$acc)/$p; last; }
+      $acc += $p*$dt;
+    }
+  }
+
+  my $etaStr;
+  if($Eneed <= 0.02) { $etaStr = sprintf("Akku voll (%s kWh)",$nf->($Enow)); }
+  elsif(defined $tfull && $tfull >= $nowH) {
+    my $dur = $tfull - $nowH;
+    my $dh = int($dur); my $dm = int(($dur-$dh)*60 + 0.5);
+    if($dm >= 60) { $dh++; $dm -= 60; }
+    my $eh = int($tfull); my $em = int(($tfull-$eh)*60 + 0.5);
+    if($em >= 60) { $eh++; $em -= 60; }
+    $etaStr = sprintf("Akku %s / %s kWh \x{2192} socMax ~%02d:%02d (in %dh %02dmin)",$nf->($Enow),$nf->($Emax),$eh,$em,$dh,$dm);
+  }
+  else { $etaStr = sprintf("Akku %s / %s kWh \x{2192} socMax heute nicht erreicht",$nf->($Enow),$nf->($Emax)); }
+
+  my $sw = ReadingsVal($fcDev,"debug_sun_window","6-21");
+  my ($sw1) = split("-",$sw);
+  my $hlo = (defined $sw1 && $sw1 ne "") ? ($sw1-1) : 5;
+  $hlo = 4 if($hlo < 4); $hlo = 8 if($hlo > 8);
+  my $hhi = 23;
+  my $span = $hhi - $hlo + 1;
+
+  my $W=760; my $Hh=380;
+  my $x0=54; my $x1=706; my $pw=$x1-$x0;
+  my $y0=94; my $y1=344; my $ph=$y1-$y0;
+  my $pxh = $pw/$span;
+  my $xAt = sub { my $h=shift; return $x0 + ($h-$hlo)*$pxh; };
+
+  my $rawmax = 0.1;
+  for my $h ($hlo..$hhi) { $rawmax = $curve[$h] if $curve[$h] > $rawmax; }
+  $rawmax = $istKw  if $istKw  > $rawmax;
+  $rawmax = $sollKw if $sollKw > $rawmax;
+  my $ymax = ($rawmax == int($rawmax)) ? ($rawmax + 1) : $cl->($rawmax + 0.05);
+  $ymax = 1 if $ymax < 1;
+  my $yL = sub { my $kw=shift; return $y1 - ($kw/$ymax)*$ph; };
+
+  my $EaxisMax = ($Emax > 0) ? $Emax*1.12 : 1;
+  my $yR = sub { my $e=shift; return $y1 - ($e/$EaxisMax)*$ph; };
+
+  my $hm = sub { my $t=shift; my $h=int($t+1e-6); my $m=int(($t-$h)*60+0.5); if($m>=60){$h++;$m-=60;} return sprintf("%02d:%02d",$h,$m); };
+
+  my $smooth = sub {
+    my ($pts) = @_;
+    return "" if(@$pts < 2);
+    my $d = sprintf("M %.1f %.1f",$pts->[0][0],$pts->[0][1]);
+    for(my $i=0;$i<$#$pts;$i++){
+      my $p0=$i>0?$pts->[$i-1]:$pts->[$i];
+      my $p1=$pts->[$i]; my $p2=$pts->[$i+1];
+      my $p3=($i+2<=$#$pts)?$pts->[$i+2]:$p2;
+      my $dx=$p2->[0]-$p1->[0];
+      my $c1x=$p1->[0]+$dx/3;
+      my $c2x=$p2->[0]-$dx/3;
+      my $c1y=$p1->[1]+($p2->[1]-$p0->[1])/6;
+      my $c2y=$p2->[1]-($p3->[1]-$p1->[1])/6;
+      my $ylo=($p1->[1]<$p2->[1])?$p1->[1]:$p2->[1];
+      my $yhi=($p1->[1]>$p2->[1])?$p1->[1]:$p2->[1];
+      $c1y=$ylo if($c1y<$ylo); $c1y=$yhi if($c1y>$yhi);
+      $c2y=$ylo if($c2y<$ylo); $c2y=$yhi if($c2y>$yhi);
+      $d .= sprintf(" C %.1f %.1f %.1f %.1f %.1f %.1f",$c1x,$c1y,$c2x,$c2y,$p2->[0],$p2->[1]);
+    }
+    return $d;
+  };
+
+  my $TX = sub {
+    my ($x,$y,$fs,$fw,$anc,$col,$str)=@_;
+    my $a=$anc?" text-anchor=\"$anc\"":"";
+    return sprintf("<text x=\"%.1f\" y=\"%.1f\" font-size=\"%d\"%s style=\"fill:%s !important;font-weight:%d\">%s</text>",$x,$y,$fs,$a,$col,$fw,$str);
+  };
+
+  my $cGray = "#5b6168";
+  my $cGray2= "#7a7f86";
+
+  my @s;
+  push @s, '<div style="width:840px!important;height:410px;max-width:none!important;overflow:visible">';
+  push @s, sprintf('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d" width="840" height="410" style="width:840px!important;height:410px!important;max-width:none!important;display:block" preserveAspectRatio="xMidYMid meet" font-family="DejaVu Sans,Verdana,Arial,sans-serif">',$W,$Hh);
+  push @s, sprintf('<rect x="1" y="1" width="%d" height="%d" rx="10" fill="%s" stroke="%s"/>',$W-2,$Hh-2,$cBg,$cBd);
+
+  push @s, $T->($x0,30,17,700,"",$title);
+
+  my %pillCol=(laden=>"#157a40",halten=>"#b8860b",beide_m1=>"#3f6da0",einzel_laden=>"#3f6da0",nacht=>"#555b62",uebergang=>"#555b62",morgen=>"#555b62",abend=>"#555b62");
+  my $pc=$pillCol{$modus}//"#555b62";
+  my $ptxt=uc($modus);
+  my $pillW=length($ptxt)*9+24;
+  my $pillX=$W-$pillW-12;
+  push @s, sprintf('<rect x="%.1f" y="14" width="%.1f" height="23" rx="11.5" fill="%s"/>',$pillX,$pillW,$pc);
+  push @s, $TX->($pillX+$pillW/2,30,12,700,"middle","#ffffff",$ptxt);
+
+  my $info = sprintf("%s \x{b7} %s \x{b7} Prognose %s kWh \x{b7} Start %s \x{b7} %s",$socStr,$zielStr,$nf->($fcKwh),$hm->($startH),$tag);
+  push @s, $TX->($x0,52,12,400,"",$cGray,$info);
+  push @s, $TG->($x0,71,13,700,"",$etaStr);
+
+  my $kstep = ($ymax > 7) ? 2 : 1;
+  for(my $k=0;$k<=$ymax+0.001;$k+=$kstep){
+    my $yy=$yL->($k);
+    push @s, sprintf('<line x1="%d" y1="%.1f" x2="%d" y2="%.1f" stroke="%s" stroke-width="1"/>',$x0,$yy,$x1,$yy,$cGrid);
+    push @s, $TX->($x0-7,$yy+4,11,400,"end",$cGray2,$nf->($k));
+  }
+  push @s, $TX->($x0-7,$yL->($ymax)-8,10,600,"end",$cGray2,"kW");
+
+  my $estep;
+  if($EaxisMax <= 6)      { $estep = 1; }
+  elsif($EaxisMax <= 13)  { $estep = 2; }
+  elsif($EaxisMax <= 32)  { $estep = 5; }
+  else                    { $estep = 10; }
+  for(my $e=0; $e<=$EaxisMax+0.001; $e+=$estep){
+    my $yy=$yR->($e);
+    next if($yy < $y0-0.1 || $yy > $y1+0.1);
+    push @s, sprintf('<line x1="%d" y1="%.1f" x2="%d" y2="%.1f" stroke="%s" stroke-width="1"/>',$x1,$yy,$x1+4,$yy,$cEn);
+    push @s, $TX->($x1+7,$yy+4,11,400,"start",$cEn,$nf->($e));
+  }
+  push @s, $TX->($x1+7,86,10,600,"start",$cEn,"kWh");
+
+  my $ysm=$yR->($Emax);
+  push @s, sprintf('<line x1="%d" y1="%.1f" x2="%d" y2="%.1f" stroke="%s" stroke-width="1" stroke-dasharray="5 4" opacity="0.55"/>',$x0,$ysm,$x1,$ysm,$cEn);
+
+  if($startH > $hlo+0.01 && $startH < $hhi+1 && ($stH+0) > 0){
+    my $xs=$xAt->($startH);
+    push @s, sprintf('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="%s" stroke-width="1.2" stroke-dasharray="4 3"/>',$xs,$y0+12,$xs,$y1,$cStart);
+    push @s, $TX->($xs+3,$y0+10,10,600,"start",$cStart,sprintf("Start %s",$hm->($startH)));
+  }
+
+  my $xn=$xAt->($nowH);
+  push @s, sprintf('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="#9aa0a6" stroke-width="1" stroke-dasharray="2 3"/>',$xn,$y0,$xn,$y1);
+
+  push @s, sprintf('<line x1="%d" y1="%.1f" x2="%d" y2="%.1f" stroke="%s" stroke-width="1.5"/>',$x0,$y1,$x1,$y1,$cAx);
+  my $xstep = ($span > 10) ? 2 : 1;
+  for(my $h=$hlo;$h<=$hhi+1;$h+=$xstep){
+    my $xx=$xAt->($h);
+    push @s, sprintf('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="%s" stroke-width="1"/>',$xx,$y1,$xx,$y1+4,$cAx);
+    push @s, $TX->($xx,$y1+17,11,400,"middle",$cGray,sprintf("%d",$h%24));
+  }
+  push @s, $TX->($xn,$y1+31,10,600,"middle",$cGray,sprintf("jetzt %s",$hm->($nowH)));
+
+  my @ppt;
+  for my $h ($hlo..$hhi){ push @ppt,[$xAt->($h+0.5),$yL->($curve[$h])]; }
+  my $planPath=$smooth->(\@ppt);
+  if($planPath ne ""){
+    my $base=$yL->(0);
+    my $area=$planPath." L ".sprintf("%.1f %.1f",$ppt[-1][0],$base)." L ".sprintf("%.1f %.1f",$ppt[0][0],$base)." Z";
+    push @s, sprintf('<path d="%s" fill="%s" fill-opacity="0.20"/>',$area,$cPlan);
+    push @s, sprintf('<path d="%s" fill="none" stroke="%s" stroke-width="2.4" stroke-linecap="round"/>',$planPath,$cPlanS);
+  }
+  my $pkh=$hlo; for my $h ($hlo..$hhi){ $pkh=$h if($curve[$h]>$curve[$pkh]); }
+  if($curve[$pkh] > 0.05){
+    push @s, $TX->($xAt->($pkh+0.5),$yL->($curve[$pkh])-8,11,700,"middle",$cPlanS,"Plan");
+  }
+
+  my @ist;
+  for my $h (0..23){ $ist[$h] = ReadingsNum($emDev,sprintf("ist_kw_%02d",$h),-1); }
+  my $curH = int($nowH);
+  my @ipt;
+  for my $h ($hlo..$hhi){
+    next if($h > $curH);
+    next if($ist[$h] < 0);
+    my $ix = ($h < $curH) ? ($h+0.5) : $nowH;
+    push @ipt,[$xAt->($ix),$yL->($ist[$h])];
+  }
+  if(@ipt >= 2){
+    my $istPath=$smooth->(\@ipt);
+    push @s, sprintf('<path d="%s" fill="none" stroke="%s" stroke-width="2.2" stroke-linecap="round"/>',$istPath,$cIst);
+  }
+
+  my @ept=([$xAt->($hlo),$yR->($Enow)]);
+  push @ept,[$xAt->($S),$yR->($Enow)] if($S > $hlo+0.02);
+  my $tEnd=(defined $tfull && $tfull <= $hhi+1) ? $tfull : ($hhi+1);
+  for(my $t=int($S)+1; $t < $tEnd-0.02; $t++){ push @ept,[$xAt->($t),$yR->($Enow+$cumE->($t))]; }
+  push @ept,[$xAt->($tEnd),$yR->($Enow+$cumE->($tEnd))];
+  push @ept,[$xAt->($hhi+1),$yR->($Emax)] if($tEnd < $hhi+1-0.02);
+  my @eclean; my $elastx=-1e9;
+  for my $p (@ept){ if($p->[0] > $elastx+0.5){ push @eclean,$p; $elastx=$p->[0]; } }
+  @ept=@eclean;
+  my $enPath=$smooth->(\@ept);
+  push @s, sprintf('<path d="%s" fill="none" stroke="%s" stroke-width="2.6" stroke-linecap="round"/>',$enPath,$cEn);
+
+  push @s, sprintf('<circle cx="%.1f" cy="%.1f" r="3.5" fill="%s"/>',$xAt->($S),$yR->($Enow),$cEn);
+  my $eAnc = ($S > $hlo+1.5) ? "end" : "start";
+  my $eOff = ($S > $hlo+1.5) ? -6 : 8;
+  push @s, $TG->($xAt->($S)+$eOff,$yR->($Enow)-7,11,700,$eAnc,sprintf("%s kWh",$nf->($Enow)));
+  push @s, $TG->($x1-2,$ysm-6,11,700,"end",sprintf("socMax %s kWh",$nf->($Emax)));
+
+  my $xi=$xAt->($nowH); my $yi; my $ival;
+  if(@ipt >= 1){ $yi=$ipt[-1][1]; $ival=($ist[$curH] >= 0) ? $ist[$curH] : $istKw; }
+  else { $yi=$yL->($istKw); $ival=$istKw; }
+  push @s, sprintf('<circle cx="%.1f" cy="%.1f" r="5" fill="%s" stroke="#ffffff" stroke-width="1.5"/>',$xi,$yi,$cIst);
+  my $iy = ($yi-8 < $y0+6) ? $yi+16 : $yi-8;
+  push @s, $TX->($xi+9,$iy,11,700,"start",$cIstSt,sprintf("Ist %s kW",$nf->($ival)));
+
+  push @s, "</svg></div>";
+  return join("",@s);
+}
+
+sub
+BresserWxUpload($) {
+  my ($request) = @_;
+  my $dev = "BresserWetter";
+  my $user = "meineStation";
+  my $pass = "geheim123";
+
+  return ("text/plain; charset=utf-8", "400 Bad request")
+    unless $request =~ m,^/[^?]+\?(.*)$,;
+  my $qs = $1;
+
+  my %p;
+  foreach my $kv (split(/&/, $qs)) {
+    my ($k,$v) = split(/=/, $kv, 2);
+    $v = urlDecode($v // "");
+    $p{$k} = $v;
+  }
+
+  return ("text/plain; charset=utf-8", "401 Unauthorized")
+    if $p{wsid} ne $user || $p{wspw} ne $pass;
+
+  return ("text/plain; charset=utf-8", "404 Device unknown")
+    unless defined $defs{$dev};
+
+  my %map = (
+    "rbar"        => "luftdruck_relativ",
+    "abar"        => "luftdruck_absolut",
+    "intem"       => "temperatur_innen",
+    "inhum"       => "feuchte_innen",
+    "inbat"       => "batterie_konsole",
+    "t1tem"       => "temperatur_aussen",
+    "t1hum"       => "feuchte_aussen",
+    "t1feels"     => "gefuehlte_temperatur",
+    "t1chill"     => "windchill",
+    "t1heat"      => "hitzeindex",
+    "t1dew"       => "taupunkt",
+    "t1wdir"      => "windrichtung_grad",
+    "t1uvi"       => "uv_index",
+    "t1solrad"    => "sonneneinstrahlung",
+    "t1wbgt"      => "wbgt",
+    "t1bat"       => "batterie_aussensensor",
+    "t1cn"        => "verbindung_aussensensor",
+    "t1rainra"    => "regenrate",
+    "t1rainhr"    => "regen_stunde",
+    "t1raindy"    => "regen_tag",
+    "t1rainwy"    => "regen_woche",
+    "t1rainmth"   => "regen_monat",
+    "t1rainyr"    => "regen_jahr",
+    "t1ws10mav"   => "wind_10min_mittel_ms",
+    "datetime"    => "zeitstempel_station",
+    "apiver"      => "api_version",
+  );
+
+  readingsBeginUpdate($defs{$dev});
+
+  foreach my $api (keys %map) {
+    next unless defined $p{$api};
+    readingsBulkUpdate($defs{$dev}, $map{$api}, $p{$api});
+  }
+
+  if(defined $p{t1ws}) {
+    readingsBulkUpdate($defs{$dev}, "windgeschwindigkeit_ms", $p{t1ws});
+    readingsBulkUpdate($defs{$dev}, "windgeschwindigkeit_kmh", sprintf("%.1f", $p{t1ws}*3.6));
+  }
+  if(defined $p{t1wgust}) {
+    readingsBulkUpdate($defs{$dev}, "windboe_ms", $p{t1wgust});
+    readingsBulkUpdate($defs{$dev}, "windboe_kmh", sprintf("%.1f", $p{t1wgust}*3.6));
+  }
+  if(defined $p{t1ws10mav}) {
+    readingsBulkUpdate($defs{$dev}, "wind_10min_mittel_kmh", sprintf("%.1f", $p{t1ws10mav}*3.6));
+  }
+
+  if(defined $p{t1wdir}) {
+    my @himmel = ("N","NNO","NO","ONO","O","OSO","SO","SSO",
+                  "S","SSW","SW","WSW","W","WNW","NW","NNW");
+    my $idx = int(($p{t1wdir}+11.25)/22.5) % 16;
+    readingsBulkUpdate($defs{$dev}, "windrichtung", $himmel[$idx]);
+  }
+
+  readingsBulkUpdate($defs{$dev}, "lastUpdate", TimeNow());
+  readingsEndUpdate($defs{$dev}, 1);
+
+  return ("text/plain; charset=utf-8", "200 OK");
+}
+
+sub SendMail($$;$) {
+  my ($subject, $body, $to) = @_;
+  $to //= 'masp@vodafonemail.de';
+  $subject =~ s/[\r\n]/ /g;
+  $body =~ s/'/'\\''/g;
+  $subject =~ s/'/'\\''/g;
+  qx(printf '%s\n\n%s\n' 'Subject: $subject' '$body' | msmtp $to >/dev/null 2>&1 &);
+  return "gesendet an $to";
+}
+
+$data{FWEXT}{"/wxupload"}{FUNC}     = "BresserWxUpload";
+$data{FWEXT}{"/wxupload"}{FORKABLE} = 0;
+
+
+
+sub Nowcast_DegToDir($)
+{
+  my ($deg) = @_;
+
+  my @dir = (
+    "N",
+    "NNO",
+    "NO",
+    "ONO",
+    "O",
+    "OSO",
+    "SO",
+    "SSO",
+    "S",
+    "SSW",
+    "SW",
+    "WSW",
+    "W",
+    "WNW",
+    "NW",
+    "NNW"
+  );
+
+  my $i = int(($deg + 11.25) / 22.5);
+
+  return $dir[$i % 16];
+}
+
+
+
+sub Nowcast_Update() {
+  my $dev = "RegenNowcast";
+  return "Device $dev nicht vorhanden" unless defined $defs{$dev};
+
+  my $lat0 = 49.5727;
+  my $lon0 = 11.1708;
+
+  my $url_wind = "https://api.open-meteo.com/v1/dwd-icon?latitude=$lat0&longitude=$lon0&current=wind_speed_850hPa,wind_direction_850hPa";
+
+  HttpUtils_NonblockingGet({
+    url => $url_wind,
+    timeout => 10,
+    hash => {
+      lat0=>$lat0,
+      lon0=>$lon0,
+      dev=>$dev
+    },
+    callback => \&Nowcast_WindCallback
+  });
+
+  return "Wind-Abfrage gestartet";
+}
+
+
+sub Nowcast_WindCallback($$$)
+{
+  my ($param, $err, $data) = @_;
+
+  my $lat0 = $param->{hash}{lat0};
+  my $lon0 = $param->{hash}{lon0};
+  my $dev  = $param->{hash}{dev};
+
+
+  if($err || !$data) {
+
+    Log3 $dev, 3, "Nowcast Wind-Abfrage Fehler: $err";
+
+    fhem("setreading $dev fehler_wind $err");
+
+    return;
+  }
+
+
+  my $ws = ($data =~ /"wind_speed_850hPa":([0-9\.]+)/) ? $1 : 0;
+  my $wd = ($data =~ /"wind_direction_850hPa":([0-9\.]+)/) ? $1 : 0;
+
+
+  #
+  # Meteorologische Windrichtung:
+  # Woher kommt der Wind / die Regenfront
+  #
+  my $regen_quelle_grad = $wd;
+  my $regen_quelle_text = Nowcast_DegToDir($wd);
+
+
+  readingsBeginUpdate($defs{$dev});
+
+
+  readingsBulkUpdate(
+    $defs{$dev},
+    "wind850_speed_kmh",
+    $ws
+  );
+
+
+  readingsBulkUpdate(
+    $defs{$dev},
+    "wind850_richtung_grad",
+    $wd
+  );
+
+
+  readingsBulkUpdate(
+    $defs{$dev},
+    "wind850_kommt_aus",
+    Nowcast_DegToDir($wd)
+  );
+
+
+  readingsBulkUpdate(
+    $defs{$dev},
+    "regenfront_quelle_grad",
+    $regen_quelle_grad
+  );
+
+
+  readingsBulkUpdate(
+    $defs{$dev},
+    "regenfront_quelle_richtung",
+    $regen_quelle_text
+  );
+
+
+  readingsBulkUpdate(
+    $defs{$dev},
+    "standort_lat",
+    $lat0
+  );
+
+
+  readingsBulkUpdate(
+    $defs{$dev},
+    "standort_lon",
+    $lon0
+  );
+
+
+  readingsEndUpdate($defs{$dev},1);
+
+
+
+  my @punkte;
+
+
+  push @punkte,{
+    name=>"standort",
+    lat=>$lat0,
+    lon=>$lon0,
+    dist_km=>0
+  };
+
+
+
+  #
+  # Always create directional points
+  #
+  my @dirs = (
+    ["N",0],
+    ["O",90],
+    ["S",180],
+    ["W",270]
+  );
+
+
+  foreach my $d (@dirs) {
+
+    my ($nm,$deg)=@$d;
+
+
+    my @ll = Nowcast_ShiftLatLon(
+      $lat0,
+      $lon0,
+      $deg,
+      10
+    );
+
+
+    push @punkte,{
+      name=>"punkt_${nm}",
+      lat=>$ll[0],
+      lon=>$ll[1],
+      dist_km=>10
+    };
+
+  }
+
+
+
+  #
+  # Wind driven upstream points
+  #
+  if($ws >= 5) {
+
+
+    #
+    # Wichtig:
+    # wd zeigt die Herkunftsrichtung
+    # nicht die Bewegungsrichtung
+    #
+    my $upstream_deg = $wd;
+
+
+    readingsBeginUpdate($defs{$dev});
+
+
+    readingsBulkUpdate(
+      $defs{$dev},
+      "upstream_richtung_grad",
+      $upstream_deg
+    );
+
+
+    readingsBulkUpdate(
+      $defs{$dev},
+      "upstream_richtung",
+      Nowcast_DegToDir($upstream_deg)
+    );
+
+
+    readingsEndUpdate($defs{$dev},1);
+
+
+
+    foreach my $km (5,10,20) {
+
+
+      my @ll = Nowcast_ShiftLatLon(
+        $lat0,
+        $lon0,
+        $upstream_deg,
+        $km
+      );
+
+
+      push @punkte,{
+        name=>"punkt_${km}km",
+        lat=>$ll[0],
+        lon=>$ll[1],
+        dist_km=>$km
+      };
+
+    }
+
+
+    fhem(
+      "setreading $dev modus Upstream_Wind850"
+    );
+
+
+  }
+  else {
+
+
+    fhem(
+      "setreading $dev modus Rundum_bei_Windstille"
+    );
+
+  }
+
+
+
+  fhem(
+    "setreading $dev anzahl_punkte ".scalar(@punkte)
+  );
+
+
+
+  foreach my $p (@punkte) {
+
+
+    my $url=sprintf(
+      "https://api.brightsky.dev/current_weather?lat=%.4f&lon=%.4f",
+      $p->{lat},
+      $p->{lon}
+    );
+
+
+    HttpUtils_NonblockingGet({
+
+      url=>$url,
+
+      timeout=>10,
+
+      hash=>{
+        dev=>$dev,
+        punkt=>$p,
+        wind_speed_kmh=>$ws,
+        wind_direction=>$wd
+      },
+
+      callback=>\&Nowcast_RegenCallback
+
+    });
+
+  }
+}
+
+
+
+sub Nowcast_RegenCallback($$$) {
+
+
+  my ($param,$err,$data)=@_;
+
+
+  my $dev=$param->{hash}{dev};
+  my $p=$param->{hash}{punkt};
+  my $ws=$param->{hash}{wind_speed_kmh};
+
+
+  if($err || !$data) {
+
+    fhem(
+      "setreading $dev fehler_regen_".$p->{name}." $err"
+    );
+
+    return;
+
+  }
+
+
+  my $json=eval {
+    decode_json($data)
+  };
+
+
+  my $r10=0;
+  my $r30=0;
+  my $r60=0;
+
+
+  if(
+    $json &&
+    ref($json) eq "HASH" &&
+    $json->{weather}
+  ) {
+
+    $r10=$json->{weather}{precipitation_10} // 0;
+    $r30=$json->{weather}{precipitation_30} // 0;
+    $r60=$json->{weather}{precipitation_60} // 0;
+
+  }
+
+
+  my $nm=$p->{name};
+
+
+  readingsBeginUpdate($defs{$dev});
+
+
+  readingsBulkUpdate(
+    $defs{$dev},
+    "${nm}_lat",
+    sprintf("%.4f",$p->{lat})
+  );
+
+
+  readingsBulkUpdate(
+    $defs{$dev},
+    "${nm}_lon",
+    sprintf("%.4f",$p->{lon})
+  );
+
+
+  readingsBulkUpdate(
+    $defs{$dev},
+    "${nm}_regen_10min",
+    $r10
+  );
+
+
+  readingsBulkUpdate(
+    $defs{$dev},
+    "${nm}_regen_30min",
+    $r30
+  );
+
+
+  readingsBulkUpdate(
+    $defs{$dev},
+    "${nm}_regen_60min",
+    $r60
+  );
+
+
+  readingsBulkUpdate(
+    $defs{$dev},
+    "${nm}_dist_km",
+    $p->{dist_km}
+  );
+
+
+  readingsEndUpdate($defs{$dev},1);
+
+
+
+  #
+  # Determine rain arrival
+  #
+
+  my $lokal=ReadingsNum(
+    "BresserWetter",
+    "regenrate",
+    0
+  );
+
+
+  my $lokal_alter=ReadingsAge(
+    "BresserWetter",
+    "lastUpdate",
+    99999
+  );
+
+
+  my $kommt_min=999;
+  my $kommt_aus="-";
+
+
+  if($lokal_alter < 300 && $lokal > 0) {
+
+    $kommt_min=0;
+    $kommt_aus="vor_Ort";
+
+
+  } else {
+
+
+    my @kandidaten;
+
+
+    my @modus_punkte=(
+      "N",
+      "O",
+      "S",
+      "W",
+      "5km",
+      "10km",
+      "20km"
+    );
+
+
+    foreach my $suff (@modus_punkte) {
+
+
+      my $rv=ReadingsNum(
+        $dev,
+        "punkt_${suff}_regen_10min",
+        0
+      );
+
+
+      my $dist=ReadingsNum(
+        $dev,
+        "punkt_${suff}_dist_km",
+        0
+      );
+
+
+      if($rv >= 0.1) {
+
+
+        my $speed=($ws < 5) ? 10 : $ws;
+
+
+        my $min=int(
+          $dist/$speed*60+0.5
+        );
+
+
+        push @kandidaten,{
+          min=>$min,
+          punkt=>$suff
+        };
+
+      }
+
+    }
+
+
+    if(@kandidaten) {
+
+      my @sortiert=sort {
+        $a->{min} <=> $b->{min}
+      } @kandidaten;
+
+
+      $kommt_min=$sortiert[0]{min};
+      $kommt_aus=$sortiert[0]{punkt};
+
+    }
+
+  }
+
+
+  readingsBeginUpdate($defs{$dev});
+
+
+  readingsBulkUpdate(
+    $defs{$dev},
+    "regen_kommt_in_min",
+    $kommt_min
+  );
+
+
+  readingsBulkUpdate(
+    $defs{$dev},
+    "regen_kommt_aus",
+    $kommt_aus
+  );
+
+
+  readingsBulkUpdate(
+    $defs{$dev},
+    "regen_lokal_ist",
+    $lokal
+  );
+
+
+  readingsBulkUpdate(
+    $defs{$dev},
+    "lastUpdate",
+    TimeNow()
+  );
+
+
+  readingsEndUpdate($defs{$dev},1);
+
+}
+
+sub Nowcast_ShiftLatLon($$$$)
+{
+  my ($lat, $lon, $bearing_deg, $dist_km) = @_;
+  my $R = 6371.0;
+  my $br = $bearing_deg * 3.14159265/180;
+  my $lat_rad = $lat * 3.14159265/180;
+  my $lon_rad = $lon * 3.14159265/180;
+  my $d_R = $dist_km / $R;
+  my $lat2 = asin(sin($lat_rad)*cos($d_R) + cos($lat_rad)*sin($d_R)*cos($br));
+  my $lon2 = $lon_rad + atan2(sin($br)*sin($d_R)*cos($lat_rad),
+                              cos($d_R)-sin($lat_rad)*sin($lat2));
+  return ($lat2*180/3.14159265, $lon2*180/3.14159265);
+}
+
+sub SendWhatsApp($;$$) {
+  my ($text, $phone, $apikey) = @_;
+  $phone  //= "+491741536723";
+  $apikey //= "3612010";
+  $text =~ s/'/'\\''/g;
+  my $urlPhone = $phone;
+  $urlPhone =~ s/\+/%2B/g;
+  my $urlText  = $text;
+  $urlText =~ s/([^A-Za-z0-9._~-])/sprintf("%%%02X",ord($1))/ge;
+  my $url = "https://api.callmebot.com/whatsapp.php?phone=${urlPhone}&text=${urlText}&apikey=${apikey}";
+  qx(curl -s '$url' >/dev/null 2>&1 &);
+  return "WhatsApp gesendet an $phone";
+}
+
+sub AktienKurseUpdate {
+  my $list = ReadingsVal("Aktien_Config","isin_list","");
+  return if ($list eq "");
+  foreach my $isin (split /,/, $list) {
+    $isin =~ s/\s+//g;
+    next if ($isin eq "");
+    my $url = "https://www.tradegatebsx.com/refresh.php"
+      . "?isin=$isin";
+    HttpUtils_NonblockingGet({
+      url      => $url,
+      timeout  => 10,
+      isin     => $isin,
+      header   => "User-Agent: Mozilla/5.0 (X11; Linux x86_64)",
+      callback => \&AktienKurse_Callback
+    });
+  }
+}
+
+sub AktienKurse_Callback {
+  my ($param, $err, $data) = @_;
+  my $isin = $param->{isin};
+  my $dev  = "Aktie_$isin";
+  if ($err ne "" || $data !~ /^\s*\{/) {
+    Log 3, "AktienKurse $isin: Fehler $err";
+    return;
+  }
+  fhem("defmod $dev dummy")
+    if (!defined $defs{$dev});
+  fhem("attr $dev room Akti")
+    if (AttrVal($dev, "room", "") eq "");
+  my %v;
+  foreach my $k ("bid","ask","last","high",
+    "low","close") {
+    ($v{$k}) = $data =~
+      /"$k":\s*"?(\d+(?:[.,]\d+)*)"?/;
+    $v{$k} //= 0;
+    if ($v{$k} =~ /,/) {
+      $v{$k} =~ s/\.//g;
+      $v{$k} =~ s/,/./;
+    }
+    $v{$k} = 0
+      unless ($v{$k} =~ /^-?\d+(\.\d+)?$/);
+    $v{$k} += 0;
+  }
+  my $spread = sprintf("%.3f",
+    $v{ask} - $v{bid});
+  my $sprpct = $v{bid} > 0
+    ? sprintf("%.3f",
+      100*($v{ask}-$v{bid})/$v{bid})
+    : 0;
+  my $now = time();
+  my $hms = POSIX::strftime("%d.%m. %H:%M:%S",
+    localtime($now));
+  if (ReadingsVal($dev, "name", "") eq "") {
+    my $nurl = "https://www.tradegatebsx.com/"
+      . "orderbuch.php?isin=$isin";
+    HttpUtils_NonblockingGet({
+      url      => $nurl,
+      timeout  => 10,
+      isin     => $isin,
+      header   => "User-Agent: Mozilla/5.0"
+        . " (X11; Linux x86_64)",
+      callback => \&AktienName_Callback
+    });
+  }
+  readingsBeginUpdate($defs{$dev});
+  readingsBulkUpdate($defs{$dev}, "bid",
+    $v{bid});
+  readingsBulkUpdate($defs{$dev}, "ask",
+    $v{ask});
+  readingsBulkUpdate($defs{$dev}, "last",
+    $v{last});
+  readingsBulkUpdate($defs{$dev}, "high",
+    $v{high});
+  readingsBulkUpdate($defs{$dev}, "low",
+    $v{low});
+  readingsBulkUpdate($defs{$dev},
+    "close_vortag", $v{close});
+  readingsBulkUpdate($defs{$dev}, "spread",
+    $spread);
+  readingsBulkUpdate($defs{$dev},
+    "spread_pct", $sprpct);
+  readingsBulkUpdate($defs{$dev},
+    "update_ts", $now);
+  readingsBulkUpdate($defs{$dev},
+    "update_hms", $hms);
+  my $open = ReadingsVal($dev,
+    "day_open", "");
+  my $oday = ReadingsVal($dev,
+    "day_open_date", "");
+  my $today = POSIX::strftime("%Y-%m-%d",
+    localtime($now));
+  if ($oday ne $today && $v{last} > 0) {
+    readingsBulkUpdate($defs{$dev},
+      "day_open", $v{last});
+    readingsBulkUpdate($defs{$dev},
+      "day_open_date", $today);
+  }
+  readingsEndUpdate($defs{$dev}, 1);
+}
+
+sub AktienName_Callback {
+  my ($param, $err, $data) = @_;
+  my $isin = $param->{isin};
+  my $dev  = "Aktie_$isin";
+  return if ($err ne "" || !defined $defs{$dev});
+  my ($name) = $data =~ /<h2>([^<]+)<\/h2>/;
+  return if (!$name);
+  readingsSingleUpdate($defs{$dev}, "name",
+    $name, 1);
+fhem("attr $dev stateFormat"
+    . " name: last EUR signal");
+fhem("attr $dev devStateIcon"
+    . ' {AktienStateIcon($name)}');
+	AktienPlotAnlegen($isin, $name);
+}
+
+sub AktienPlotAnlegen {
+  my ($isin, $name) = @_;
+  my $svg   = "SVG_Aktie_$isin";
+  my $gplot = "svg_aktie_$isin";
+  return if (defined $defs{$svg});
+  my $path = "/opt/fhem/www/gplot/$gplot.gplot";
+  if (!-e $path) {
+    my $tpl = << "EOF";
+set terminal png transparent size <SIZE> crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title '$name'
+set ytics
+set grid ytics
+set ylabel "EUR"
+
+#FileLog 4:Aktie_$isin.last\\x3a::
+#FileLog 4:Aktie_$isin.bid\\x3a::
+#FileLog 4:Aktie_$isin.ask\\x3a::
+
+plot "<IN>" using 1:2 axes x1y1 title 'Last' ls l0 lw 2 with lines,\\
+     "<IN>" using 1:2 axes x1y1 title 'Bid' ls l1 lw 1 with lines,\\
+     "<IN>" using 1:2 axes x1y1 title 'Ask' ls l2 lw 1 with lines
+EOF
+    if (open(my $fh, ">", $path)) {
+      print $fh $tpl;
+      close $fh;
+    } else {
+      Log 3, "AktienPlot $isin: $path nicht"
+        . " schreibbar: $!";
+      return;
+    }
+  }
+  fhem("define $svg SVG FileLog_Aktien"
+    . ":$gplot:CURRENT");
+  fhem("attr $svg room Akti");
+  fhem("attr $svg plotsize 1200,240");
+}
+
+1;

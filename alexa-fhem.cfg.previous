@@ -1,0 +1,16 @@
+{
+   "sshproxy" : {
+      "ssh" : "/usr/bin/ssh",
+      "description" : "FHEM Connector"
+   },
+   "connections" : [
+      {
+         "port" : "8083",
+         "name" : "FHEM",
+         "uid" : 999,
+         "webname" : "fhem",
+         "filter" : "alexaName=..*",
+         "server" : "127.0.0.1"
+      }
+   ]
+}

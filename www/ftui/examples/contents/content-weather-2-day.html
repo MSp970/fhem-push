@@ -1,0 +1,42 @@
+<ftui-row height="90%">
+  <ftui-column width="50%">
+    <ftui-row>
+      <ftui-label>Heute</ftui-label>
+    </ftui-row>
+    <ftui-row>
+      <ftui-weather [condition]="WeatherLocal:fc0_weatherDay" size="5"></ftui-weather>
+    </ftui-row>
+    <ftui-row>
+      <ftui-label [text]="WeatherLocal:fc0_weatherDay" scroll height="2em"></ftui-label>
+    </ftui-row>
+    <ftui-row width="80%">
+      <ftui-label [text]="WeatherLocal:fc0_Tn"><span slot="unit">°C</span></ftui-label>
+      <ftui-label [text]="WeatherLocal:fc0_Tx" size="4" class=""><span slot="unit">°C</span>
+      </ftui-label>
+    </ftui-row>
+    <ftui-row width="80%">
+      <ftui-label [text]="WeatherLocal:fc0_Rh00" color="blue"><span slot="unit">%</span></ftui-label>
+      <ftui-label [text]="WeatherLocal:fc0_rain" color="blue"><span slot="unit">mm</span></ftui-label>
+    </ftui-row>
+  </ftui-column>
+  <ftui-column width="50%">
+    <ftui-row>
+      <ftui-label>Morgen</ftui-label>
+    </ftui-row>
+    <ftui-row>
+      <ftui-weather [condition]="WeatherLocal:fc1_weatherDay" size="5"></ftui-weather>
+    </ftui-row>
+    <ftui-row>
+      <ftui-label [text]="WeatherLocal:fc1_weatherDay" scroll height="2em"></ftui-label>
+    </ftui-row>
+    <ftui-row width="80%">
+      <ftui-label [text]="WeatherLocal:fc1_tempMin" ><span slot="unit">°C</span></ftui-label>
+      <ftui-label [text]="WeatherLocal:fc1_Tx" size="4" class=""><span slot="unit">°C</span>
+      </ftui-label>
+    </ftui-row>
+    <ftui-row width="80%">
+      <ftui-label [text]="WeatherLocal:fc1_Rh00" color="blue"><span slot="unit">%</span></ftui-label>
+      <ftui-label [text]="WeatherLocal:fc1_rain" color="blue"><span slot="unit">mm</span></ftui-label>
+    </ftui-row>
+  </ftui-column>
+</ftui-row>

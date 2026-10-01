@@ -1,0 +1,20 @@
+# Created by FHEM/98_SVG.pm, 2026-07-27 19:13:00
+set terminal png transparent size <SIZE> crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'Break-Even Fortschritt - Großes System (Investition 26.680 EUR)'
+set ytics 
+set y2tics 
+set grid
+set ylabel "%"
+set y2label "Restbetrag (EUR)"
+set yrange [0:100]
+set y2range [0:28000]
+
+#FileLog_BreakEven_Grosses_System 4:HA_SDM630M_Allgemein.Break_Even_Fortschritt_Prozent\x3a::
+#FileLog_BreakEven_Grosses_System 4:HA_SDM630M_Allgemein.Break_Even_Restbetrag_EUR\x3a::
+
+plot "<IN>" using 1:2 axes x1y1 title 'Fortschritt %' ls l1 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Restbetrag (EUR)' ls l0 lw 1 with lines

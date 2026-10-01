@@ -1,0 +1,18 @@
+# Created by FHEM
+set terminal pngcairo transparent size 1200,350
+set output '%OUT%'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set format x "%d.%m\n%H:%M"
+set grid
+set ylabel "Ein / Aus"
+set yrange [-0.2:5.2]
+set ytics ("Aus" 0,"Ein" 1)
+set key outside
+
+plot \
+"<IN>" using 1:($2==1?1:0) title "Pumpe" with steps lw 2, \
+"" using 1:($3==1?2:1) title "Zone Nord" with steps lw 2, \
+"" using 1:($4==1?3:2) title "Zone Südwest" with steps lw 2, \
+"" using 1:($5==1?4:3) title "Zone Südost" with steps lw 2, \
+"" using 1:($6==1?5:4) title "Zone Süd" with steps lw 2

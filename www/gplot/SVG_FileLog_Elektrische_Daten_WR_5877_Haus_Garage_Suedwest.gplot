@@ -1,0 +1,34 @@
+# Created by FHEM/98_SVG.pm, 2026-01-23 16:44:49
+set terminal png transparent size <SIZE> crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'WR Leistungen'
+set ytics 
+set y2tics 
+set grid ytics y2tics
+set ylabel "Watt"
+set y2label "Watt"
+set yrange [0:10000]
+set y2range [0:25000]
+
+#FileLog_Elektrische_Daten_WR_5877_Haus_Garage_Suedwest 4:GoodWe_Garage_Haus_West_5877.PV_2_Power\x3a::
+#FileLog_Elektrische_Daten_WR_5877_Haus_Garage_Suedwest 4:GoodWe_Garage_Haus_West_5877.PV_1_Power\x3a::
+#FileLog_Elektrische_Daten_WR_5877_Haus_Garage_Suedwest 4:GoodWe_Garage_Haus_West_5877.PV_Total_Power\x3a::
+#FileLog_Elektrische_Daten_WR_5876_Haus_Ost_Mitte 4:GoodWe_Haus_Ost_Mitte_5876.PV_1_Power\x3a::
+#FileLog_Elektrische_Daten_WR_5876_Haus_Ost_Mitte 4:GoodWe_Haus_Ost_Mitte_5876.PV_2_Power\x3a::
+#FileLog_Elektrische_Daten_WR_5876_Haus_Ost_Mitte 4:GoodWe_Haus_Ost_Mitte_5876.PV_Total_Power\x3a::
+#FileLog_Elektrische_Daten_WR_5877_Haus_Garage_Suedwest 4:GoodWe_Garage_Haus_West_5877.PV_A9_Total_Power\x3a::
+#FileLog_Elektrische_Daten_WR_5877_Haus_Garage_Suedwest 4:myShelly_Technikraum_Deye_PM_L1.Total_Power_i\x3a::
+#FileLog_Elektrische_Daten_WR_5877_Haus_Garage_Suedwest 4:GoodWe_Garage_Haus_West_5877.PV_Goodwe_Total_Power\x3a::
+
+plot "<IN>" using 1:2 axes x1y1 title 'DC Power Garage Nord' ls l0 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'DC Power Garage Sued' ls l6 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'PV Total Power West' ls l2 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'DC Power Haus Sued' ls l3 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'DC Power Haus Nord' ls l4 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'PV Total Power Ost' ls l5 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'PV A9 Total Power' ls l1 lw 2 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'PV Deye Total Power' ls l7 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'PV Goodwe Total Power' ls l0 lw 1.5 with lines

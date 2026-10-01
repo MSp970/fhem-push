@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# This script is only installed by FHEM updates, it's NOT part of the fhempy package!
+
+# This shell script is used to create and/or activate the virtual environment.
+# Since Python 3.11 it is required to have virtual environments.
+
+# run from users $HOME directory (e.g. /opt/fhem or /home/pi)
+cd $HOME
+
+# Get the Python version
+python_version=$(python3 -c 'import sys; print(sys.version_info[:3])')
+
+# TODO add python version check > 3.8.0
+
+CONTAINER=0
+# Check if Docker-specific environment variables are set
+if [ -f "/.dockerenv" ] || [ -n "$DOCKER_CONTAINER" ] || [ -n "$DOCKERENV" ]; then
+    echo "Running within a Docker container."
+    CONTAINER=1
+fi
+
+# Check for specific process names that indicate container environments
+if grep -qE "(lxc|docker|containerd|podman|crio)" /proc/1/cgroup; then
+    echo "Running within a containerized environment."
+    CONTAINER=1
+fi
+
+# check if I run in a fhempy_venv
+if [[ "$VIRTUAL_ENV" == "" && "$CONTAINER" == 0 ]]
+then
+  
+  # if not, check if "fhempy_venv" exists
+  test -e .fhempy/fhempy_venv/bin/activate
+
+  # if not, create fhempy_venv
+  if [[ $? -ne 0 ]]
+  then
+    echo -n "Creating fhempy virtual environment..."
+    mkdir -p .fhempy
+    python3 -m venv .fhempy/fhempy_venv
+    
+    if [[ $? -ne 0 ]]
+    then
+      echo "FAILED"
+      echo "Please make sure that python3-venv package is installed"
+      echo "sudo apt install python3-venv"
+      exit 1
+    fi
+    echo "OK"
+  fi
+
+  # activate fhempy_venv
+  echo -n "Activating virtual environment..."
+  source .fhempy/fhempy_venv/bin/activate
+  echo "OK"
+fi
+
+# check if virtual env was activated
+if [[ "$VIRTUAL_ENV" == "" && "$CONTAINER" == 0 ]]
+then
+  echo "No Python virtual environment available. Exit."
+  exit 1
+fi
+
+# make sure that start_fhempy.py is executable
+chmod +x FHEM/bindings/python/bin/start_fhempy.py
+
+# run fhempy.py and push all args to it
+exec FHEM/bindings/python/bin/start_fhempy.py "$@"
+
+deactivate
+
+exit 0

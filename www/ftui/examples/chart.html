@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <!--
+    /* FHEM tablet ui - FTUI */
+    /**
+    * UI builder framework for FHEM
+    *
+    * Version: 3.0.0
+    *
+    * Copyright (c) 2020 Mario Stephan <mstephan@shared-files.de>
+    * Under MIT License (http://www.opensource.org/licenses/mit-license.php)
+    * https://github.com/knowthelist/ftui
+    */
+    -->
+  <base href="../" />
+  <script src="ftui.js"></script>
+  <link href="ftui.css" rel="stylesheet">
+  <link href="themes/ftui-theme.css" rel="stylesheet">
+  <link href="favicon.ico" rel="icon" type="image/x-icon" />
+
+  <style>
+    #mychart1 {
+      --chart-text-color: #ffdd55;
+    }
+
+  </style>
+
+  <title>FTUI Example Chart</title>
+</head>
+
+<body>
+
+  <ftui-grid>
+
+    <ftui-grid-tile row="1" col="1" height="2" width="3">
+      <ftui-grid-header>3 DATA</ftui-grid-header>
+
+      <ftui-chart title="demo-chart" y-label="Heizung" y1-label="Außen" y-unit="°C" y1-unit="°C">
+        <ftui-chart-data label="Außen" color="warning" log="FileLog_WeatherLocal" spec="4:WeatherLocal.temperature"
+                         y-axis-id="y1"></ftui-chart-data>
+        <ftui-chart-data label="Vorlauf" fill background-color="rgba(75,192,192,0.2)" color="rgba(75,192,192,1)"
+                         log="FileLog_Heizung_Vorlauf" spec="4:temperature"></ftui-chart-data>
+        <ftui-chart-data label="Rücklauf" fill background-color="#d6305650" color="#d63056"
+                         log="FileLog_Heizung_Ruecklauf" spec="4:temperature"></ftui-chart-data>
+
+        <ftui-chart-controls units="day, week"></ftui-chart-controls>
+      </ftui-chart>
+
+    </ftui-grid-tile>
+
+    <ftui-grid-tile row="3" col="1" height="2" width="3">
+      <ftui-grid-header>6am-8pm</ftui-grid-header>
+
+      <ftui-chart title="Power 6am-8pm" y-label="Power in VA"
+                  x-min="6" x-max="20" y-max="600" y1-max="1" y1-label="Gain in KWh">
+        <ftui-chart-data background-color="#d6305650" color="#d63056"
+                         log="FileLog_PVConverter"
+                         spec="4:PVConverter.Pac1"></ftui-chart-data>
+        <ftui-chart-data type="bar" y-axis-id="y1"
+                         log="FileLog_PVConverter"
+                         spec="4:PVConverter.Eac_tota::delta-h"
+                         label="Gain (max: $max KWh)"></ftui-chart-data>
+        <ftui-chart-controls></ftui-chart-controls>
+      </ftui-chart>
+
+    </ftui-grid-tile>
+
+    <ftui-grid-tile row="1" col="4" height="2" width="2">
+      <ftui-grid-header>FIX SIZE</ftui-grid-header>
+
+      <ftui-chart title="Demo-Chart 2" width="300px" height="200px">
+        <ftui-chart-data label="Humidity (Min: $min %, Max: $max %, Last: $last %)"
+                         fill log="FileLog_THSensorWZ" spec="4:THSensorWZ.humidity" [update]="THSensorWZ:state:time">
+        </ftui-chart-data>
+        <ftui-chart-controls units="day, hour"></ftui-chart-controls>
+      </ftui-chart>
+
+    </ftui-grid-tile>
+
+    <ftui-grid-tile row="3" col="4" height="2" width="2">
+      <ftui-grid-header>24h, 30d</ftui-grid-header>
+
+      <ftui-chart id="mychart1" title="humidity" width="300px" height="200px" unit="24h">
+        <ftui-chart-data fill log="FileLog_THSensorWZ" spec="4:THSensorWZ.humidity" [update]="THSensorWZ:state:time">
+        </ftui-chart-data>
+        <ftui-chart-controls units="24h, 30d"></ftui-chart-controls>
+      </ftui-chart>
+
+    </ftui-grid-tile>
+
+    <ftui-grid-tile row="5" col="1" height="2" width="3">
+      <ftui-grid-header>STEPPED EXTEND</ftui-grid-header>
+
+      <ftui-chart title="On/off state to now" y-label="State" y-min="0" y-max="4" unit="24h" extend>
+        <ftui-chart-data color="alert"
+                         log="FileLog_EingangstuerRiegel"
+                         label="locked"
+                         spec="4:EingangstuerRiegel::$fld[2]=~'closed'?1:0"
+                         offset="2"
+                         point-radius="0"
+                         border-width="2"
+                         stepped>
+        </ftui-chart-data>
+        <ftui-chart-data color="warning"
+                         log="FileLog_FlurAnwesenheit"
+                         label="presence"
+                         spec="4:FlurAnwesenheit.getG1::$fld[3]=~'on'?1:0"
+                         offset="1"
+                         point-radius="0"
+                         border-width="2"
+                         stepped>
+        </ftui-chart-data>
+        <ftui-chart-controls units="day, 24h, 30d"></ftui-chart-controls>
+      </ftui-chart>
+
+    </ftui-grid-tile>
+
+  </ftui-grid>
+
+</body>
+
+</html>

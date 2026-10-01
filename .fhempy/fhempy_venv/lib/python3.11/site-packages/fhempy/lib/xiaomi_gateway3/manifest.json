@@ -1,0 +1,8 @@
+{
+  "requirements": [
+    "python-miio==0.5.12",
+    "paho-mqtt==1.6.1",
+    "xmodem==0.4.7",
+    "cryptography==43.0.0"
+  ]
+}

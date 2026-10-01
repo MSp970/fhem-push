@@ -1,0 +1,22 @@
+# Created by FHEM
+set terminal png transparent size <SIZE> crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'Sonneneinstrahlung, UV, Regen'
+set ytics
+set y2tics
+set grid ytics
+set ylabel "Sonneneinstrahlung (W/m²)"
+set y2label "UV-Index / Regen (mm)"
+
+#FileLog 4:BresserWetter.sonneneinstrahlung\x3a:0:
+#FileLog 4:BresserWetter.uv_index\x3a:0:
+#FileLog 4:BresserWetter.regenrate\x3a:0:
+#FileLog 4:BresserWetter.regen_tag\x3a:0:
+
+plot "<IN>" using 1:2 axes x1y1 title 'Sonneneinstrahlung (W/m²)' ls l0 lw 2 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'UV-Index' ls l1 lw 1.5 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Regenrate (mm/h)' ls l2 lw 1.5 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Regen Tag (mm)' ls l3 lw 1 with lines

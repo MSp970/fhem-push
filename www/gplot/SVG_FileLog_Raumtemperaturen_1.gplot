@@ -1,0 +1,38 @@
+# Created by FHEM/98_SVG.pm, 2025-11-03 23:13:53
+set terminal png transparent size <SIZE> crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'Raumtemperaturen'
+set ytics 
+set y2tics 
+set grid
+set ylabel "°C"
+set y2label "Temperatur"
+set yrange [17:26]
+set y2range [17:25]
+
+#FileLog_Raumtemperaturen 4:Bad_Ist_Temperatur.Badtemperatur1\x3a::
+#FileLog_Raumtemperaturen 4:Buero_Ist_Temperatur.Buerotemperatur1\x3a::
+#FileLog_Raumtemperaturen 4:FlurEG_Ist_Temperatur.FlurEGtemperatur1\x3a::
+#FileLog_Raumtemperaturen 4:Flur_OG_Ist_Temperatur.Flur_OGtemperatur1\x3a::
+#FileLog_Raumtemperaturen 4:GaesteWC_Ist_Temperatur.GaesteWCtemperatur1\x3a::
+#FileLog_Raumtemperaturen 4:Kueche_Ist_Temperatur.Kuechetemperatur1\x3a::
+#FileLog_Raumtemperaturen 4:WZ_Ist_Temperatur.WZtemperatur1\x3a::
+#FileLog_Raumtemperaturen 4:SZ_Ist_Temperatur.SZtemperatur1\x3a::
+#FileLog_Raumtemperaturen 4:Lara_Ist_Temperatur.Laratemperatur1\x3a::
+#FileLog_Raumtemperaturen 4:Tobias_Ist_Temperatur.Tobiastemperatur1\x3a::
+#FileLog_Raumtemperaturen 4:Hobby_Ist_Temperatur.Hobbytemperatur1\x3a::
+
+plot "<IN>" using 1:2 axes x1y1 title 'Bad' ls l0 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'Büro' ls l1 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'Flur EG' ls l2 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'Flur OG' ls l3 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'Gäste WC' ls l4 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'Küche' ls l5 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'WZ' ls l6 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'SZ' ls l7 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'Lara' ls l8 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'Tobi' ls l8dot lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'Hobby' ls l7fill_stripe lw 1 with lines

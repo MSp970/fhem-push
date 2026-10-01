@@ -1,0 +1,3 @@
+[console_scripts]
+fhempy=fhempy.lib.fhem_pythonbinding:run
+

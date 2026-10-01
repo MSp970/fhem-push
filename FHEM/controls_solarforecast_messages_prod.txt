@@ -1,0 +1,21 @@
+################################################################################################################################
+#  Filestruktur fÃ¼r Mitteilungen:
+#  ==============================
+#  (= Severity 1 - 3: 1 - allgemeine Mitteilung, 2 - wichtige Mitteilung, 3 - Fehler oder Problem)
+#
+#  0|SV|1                   
+#  0|DE|Mitteilung 1....
+#  0|EN|Message 1 ...
+#
+#  1|SV|2
+#  1|DE|Mitteilung 2....
+#  1|EN|Message 2 ...
+#
+#  (Index kann bis max. 99999 laufen)
+#  Zeilenumbruch mit <br>
+#  Link einfÃ¼gen: <html><a href='xxx' target='_blank'>Beitrag</a></html>
+#
+################################################################################################################################
+0|SV|1                   
+0|DE|Ab dem 21.03. erfolgt die Auslieferung der Version 2.4.0. Lese Informationen zu dem Release in diesem <html><a href='https://forum.fhem.de/index.php?msg=1359985' target='_blank'>Beitrag</a></html> 
+0|EN|Version 2.4.0 will be released starting March 21. Read more about the release in this <html><a href='https://forum.fhem.de/index.php?msg=1359985' target='_blank'>post</html>

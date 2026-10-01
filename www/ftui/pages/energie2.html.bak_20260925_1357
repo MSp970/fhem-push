@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes"/>
+<title>PV-Anlage</title>
+<script src="../ftui.js"></script>
+<link href="../ftui.css" rel="stylesheet"/>
+<link href="../themes/ftui-theme.css" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#070b14; --card:rgba(22,29,46,.72); --card2:rgba(30,38,58,.6);
+  --line:rgba(120,150,200,.14); --txt:#e6ebf2; --dim:#7f8fa6;
+  --pv:#ffb300; --grid:#00e5ff; --bez:#ff5d73; --bat:#4ade80;
+  --wp:#b388ff; --deye:#ff8a3d;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;color:var(--txt);
+  font-family:"Segoe UI",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased}
+body{min-height:100vh;background:
+  radial-gradient(1200px 600px at 10% -10%,rgba(255,179,0,.10),transparent 60%),
+  radial-gradient(900px 500px at 100% 0%,rgba(0,229,255,.08),transparent 60%),
+  var(--bg);background-attachment:fixed}
+.sidenav{width:230px;background:#0a0e18;border-right:1px solid var(--line);
+  padding:18px 0;position:fixed;top:0;left:0;height:100vh;z-index:20;
+  transform:translateX(-100%);transition:transform .25s ease;
+  box-shadow:0 0 30px rgba(0,0,0,.6)}
+.sidenav.open{transform:translateX(0)}
+.navshade{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:19;
+  display:none}
+.navshade.open{display:block}
+.brand{padding:0 22px 16px;font-weight:800;letter-spacing:2px;
+  color:var(--grid);font-size:17px}
+.sidenav a{display:block;padding:11px 22px;color:var(--txt);
+  text-decoration:none;font-size:20px}
+.sidenav a:hover,.sidenav a.active{background:rgba(0,229,255,.08);
+  color:var(--grid)}
+.main{padding:10px 16px 14px;max-width:1500px;margin:0 auto}
+.headbar{display:flex;align-items:center;gap:18px;height:44px;
+  margin-bottom:10px}
+.burger{background:none;border:0;color:var(--txt);font-size:29px;
+  cursor:pointer;padding:0 6px}
+.hi{display:flex;align-items:baseline;gap:5px;font-size:20px;
+  font-weight:700;white-space:nowrap}
+.hi .u{color:var(--dim);font-size:16px;font-weight:600}
+.hi ftui-label{display:inline-flex}
+.spacer{flex:1}
+.clock{font-size:29px;font-weight:800;color:var(--grid);
+  letter-spacing:1px}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.7fr);
+  gap:12px;margin-top:12px}
+.card{position:relative;background:linear-gradient(160deg,var(--card),var(--card2));
+  border:1px solid var(--line);border-radius:14px;padding:12px 14px 10px;
+  backdrop-filter:blur(8px);overflow:hidden;
+  box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.card::before{content:"";position:absolute;left:0;top:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--acc,var(--grid)),transparent)}
+.card h3{margin:0 0 8px;font-size:17px;font-weight:700;
+  letter-spacing:.6px;text-transform:uppercase;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;color:var(--acc,var(--grid))}
+.card h3 small{color:var(--dim);font-weight:600;text-transform:none;
+  letter-spacing:0;font-size:16px;margin-left:6px}
+.hero{display:flex;align-items:baseline;gap:8px;margin:2px 0 8px}
+.hero .n{font-size:39px;font-weight:800;letter-spacing:-.5px}
+.hero .u{color:var(--dim);font-size:18px;font-weight:600}
+.hero ftui-label,.kv ftui-label,.st ftui-label{display:inline-flex}
+.kv{display:flex;align-items:baseline;justify-content:space-between;
+  font-size:17px;padding:3px 0;border-top:1px solid rgba(255,255,255,.04)}
+.kv .k{color:var(--dim)}
+.kv .v{font-weight:700;display:flex;align-items:baseline;gap:5px}
+.kv .v .u{color:var(--dim);font-weight:600;font-size:14px;min-width:24px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stats.s6{grid-template-columns:repeat(6,minmax(0,1fr))}
+.st{background:rgba(255,255,255,.03);border:1px solid var(--line);
+  border-radius:10px;padding:7px 9px}
+.st .l{font-size:14px;color:var(--dim);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.st .v{font-size:25px;font-weight:800;display:flex;align-items:baseline;
+  gap:5px;margin-top:2px}
+.st .v small{font-size:14px;color:var(--dim);font-weight:600}
+.stats.s6 .st .v{font-size:20px}
+.stats.s6 .st{padding:7px 7px}
+.sub{font-size:14px;color:var(--dim);margin:8px 0 5px;letter-spacing:.5px;
+  text-transform:uppercase}
+.pv{--acc:var(--pv)} .bat{--acc:var(--bat)} .dy{--acc:var(--deye)}
+.gr{--acc:var(--grid)}
+.c-pv{color:var(--pv)} .c-gr{color:var(--grid)} .c-bez{color:var(--bez)}
+.chart{margin-top:12px}
+.chart ftui-chart{display:block;width:100%}
+@media (max-width:1100px){
+  .grid4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid2{grid-template-columns:1fr}
+  .stats.s6{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:600px){
+  .grid4{grid-template-columns:1fr}
+  .hi:nth-of-type(n+4){display:none}
+}
+.hint{font-size:12px;color:var(--dim);margin-top:4px;text-align:right}
+.hero .u ftui-label{display:inline-flex}
+</style>
+</head>
+<body>
+<div class="navshade" id="navshade"></div>
+<nav class="sidenav" id="sidenav">
+  <div class="brand">SMART HOME</div>
+  <a href="uebersicht.html">⚡ Übersicht</a>
+  <a href="energy.html">🏠 Übersicht klassisch</a>
+  <a href="energie2.html" class="active">🔆 PV-Anlage</a>
+  <a href="klima.html">🔥 Heizung</a>
+  <a href="auto.html">🚗 E-Autos</a>
+  <a href="tobi.html">👤 Tobi</a>
+  <a href="geraete.html">🛠️ Geräte</a>
+  <a href="/fhem" style="border-top:1px solid rgba(255,255,255,.1)">⚙️ FHEM</a>
+</nav>
+
+<div class="main">
+<div class="headbar">
+  <button class="burger" id="burger">☰</button>
+  <div class="hi">🚗
+    <ftui-label [text]="OpenWB_Garage_links:Ladeleistung_gesamt_kW"></ftui-label>
+    /
+    <ftui-label [text]="OpenWB_Garage_rechts:Ladeleistung_gesamt_kW"></ftui-label>
+    <span class="u">kW</span></div>
+  <div class="hi">🔆
+    <ftui-label [text]="di_DashWerte:PV_gesamt"></ftui-label>
+    <span class="u">W</span></div>
+  <div class="hi">🔋
+    <ftui-label [text]="di_DashWerte:SOC_gew"></ftui-label>
+    <span class="u">%</span></div>
+  <div class="spacer"></div>
+  <div class="hi">🌡️
+    <ftui-label [text]="BresserWetter:temperatur_aussen"></ftui-label>
+    <span class="u">°C</span></div>
+  <div class="clock" id="clock"></div>
+</div>
+
+<div class="grid4">
+
+  <div class="card pv">
+    <h3>GW 5877<small>West · Garage</small></h3>
+    <div class="hero"><span class="n c-pv"><ftui-label
+      [text]="GoodWe_Garage_Haus_West_5877:PV_Total_Power"></ftui-label></span>
+      <span class="u">W</span></div>
+    <div class="kv"><span class="k">String Süd</span><span class="v"><ftui-label
+      [text]="GoodWe_Garage_Haus_West_5877:PV_1_Power"></ftui-label><span class="u">W</span></span></div>
+    <div class="kv"><span class="k">String Nord</span><span class="v"><ftui-label
+      [text]="GoodWe_Garage_Haus_West_5877:PV_2_Power"></ftui-label><span class="u">W</span></span></div>
+    <div class="kv"><span class="k">Heute (DC)</span><span class="v"><ftui-label
+      [text]="GoodWe_Garage_Haus_West_5877:Erz_PV_DC_Energie_kWh_day"></ftui-label><span class="u">kWh</span></span></div>
+    <div class="kv"><span class="k">Batterie</span><span class="v"><ftui-label
+      [text]="GoodWe_Garage_Haus_West_5877:Power_Battery"></ftui-label><span class="u">W</span></span></div>
+    <div class="kv"><span class="k">SOC</span><span class="v"><ftui-label
+      [text]="GoodWe_Garage_Haus_West_5877:SOC"></ftui-label><span class="u">%</span></span></div>
+    <div class="kv"><span class="k">Akku</span><span class="v"><ftui-label
+      [text]="GoodWe_Garage_Haus_West_5877:Akku_State"></ftui-label><span class="u"></span></span></div>
+    <div class="kv"><span class="k">EMS</span><span class="v"><ftui-label
+      [text]="GoodWe_Garage_Haus_West_5877:EMSPowerModeText"></ftui-label><span class="u"></span></span></div>
+  </div>
+
+  <div class="card pv">
+    <h3>GW 5876<small>Ost · Mitte</small></h3>
+    <div class="hero"><span class="n c-pv"><ftui-label
+      [text]="GoodWe_Haus_Ost_Mitte_5876:PV_Total_Power"></ftui-label></span>
+      <span class="u">W</span></div>
+    <div class="kv"><span class="k">String Süd</span><span class="v"><ftui-label
+      [text]="GoodWe_Haus_Ost_Mitte_5876:PV_1_Power"></ftui-label><span class="u">W</span></span></div>
+    <div class="kv"><span class="k">String Nord</span><span class="v"><ftui-label
+      [text]="GoodWe_Haus_Ost_Mitte_5876:PV_2_Power"></ftui-label><span class="u">W</span></span></div>
+    <div class="kv"><span class="k">Heute (DC)</span><span class="v"><ftui-label
+      [text]="GoodWe_Haus_Ost_Mitte_5876:Erz_PV_DC_Energie_kWh_day"></ftui-label><span class="u">kWh</span></span></div>
+    <div class="kv"><span class="k">Batterie</span><span class="v"><ftui-label
+      [text]="GoodWe_Haus_Ost_Mitte_5876:Power_Battery"></ftui-label><span class="u">W</span></span></div>
+    <div class="kv"><span class="k">SOC</span><span class="v"><ftui-label
+      [text]="GoodWe_Haus_Ost_Mitte_5876:SOC"></ftui-label><span class="u">%</span></span></div>
+    <div class="kv"><span class="k">Akku</span><span class="v"><ftui-label
+      [text]="GoodWe_Haus_Ost_Mitte_5876:Akku_State"></ftui-label><span class="u"></span></span></div>
+    <div class="kv"><span class="k">EMS</span><span class="v"><ftui-label
+      [text]="GoodWe_Haus_Ost_Mitte_5876:EMSPowerModeText"></ftui-label><span class="u"></span></span></div>
+  </div>
+
+  <div class="card dy">
+    <h3>Deye<small>MPPT-Summe DC</small></h3>
+    <div class="hero"><span class="n" style="color:var(--deye)"><ftui-label
+      [text]="myShelly_Technikraum_Deye_PM_L1:Deye_MPPT_sum"></ftui-label></span>
+      <span class="u">W DC · AC <ftui-label
+      [text]="myShelly_Technikraum_Deye_PM_L1:Total_Power_i"></ftui-label> W</span></div>
+    <div class="kv"><span class="k">L1 · H-NW, G-SüdMitte</span><span class="v"><ftui-label
+      [text]="myShelly_Technikraum_Deye_PM_L1:Deye_MPPT_L1"></ftui-label> / <ftui-label
+      [text]="myShelly_Technikraum_Deye_PM_L1:power_i"></ftui-label><span class="u">W</span></span></div>
+    <div class="kv"><span class="k">L2 · H-NO/SO, G-N/SüdOst</span><span class="v"><ftui-label
+      [text]="myShelly_Technikraum_Deye_PM_L1:Deye_MPPT_L2"></ftui-label> / <ftui-label
+      [text]="myShelly_Technikraum_Deye_PM_L2:power_i"></ftui-label><span class="u">W</span></span></div>
+    <div class="kv"><span class="k">L3 · H-SW</span><span class="v"><ftui-label
+      [text]="myShelly_Technikraum_Deye_PM_L1:Deye_MPPT_L3"></ftui-label> / <ftui-label
+      [text]="myShelly_Technikraum_Deye_PM_L3:power_i"></ftui-label><span class="u">W</span></span></div>
+    <div class="kv"><span class="k">Heute / Monat / Jahr</span><span class="v"><ftui-label
+      [text]="myShelly_Technikraum_Deye_PM_L1:Deye_kWh_day"></ftui-label> / <ftui-label
+      [text]="myShelly_Technikraum_Deye_PM_L1:Deye_kWh_month"></ftui-label> / <ftui-label
+      [text]="myShelly_Technikraum_Deye_PM_L1:Deye_kWh_year"></ftui-label><span class="u">kWh</span></span></div>
+    <div class="kv"><span class="k">Ohne Daten</span><span class="v"><ftui-label
+      [text]="myShelly_Technikraum_Deye_PM_L1:Deye_offline"></ftui-label><span class="u"></span></span></div>
+    <div class="hint">je Phase: DC (MPPT) / AC (Shelly)</div>
+  </div>
+
+  <div class="card gr">
+    <h3>Anlage gesamt<small>Netz · Zähler</small></h3>
+    <div class="hero"><span class="n c-pv"><ftui-label
+      [text]="HA_SDM630M_PV_Erzeugung:Power_Sum__W1"></ftui-label></span>
+      <span class="u">W PV (AC)</span></div>
+    <div class="kv"><span class="k">Einspeisung</span><span class="v c-gr"><ftui-label
+      [text]="HA_SDM630M_Nergie:Einspeiseleistung"></ftui-label><span class="u">W</span></span></div>
+    <div class="kv"><span class="k">Bezug</span><span class="v c-bez"><ftui-label
+      [text]="HA_SDM630M_Nergie:Bezugsleistung"></ftui-label><span class="u">W</span></span></div>
+    <div class="kv"><span class="k">Batterie gesamt</span><span class="v"><ftui-label
+      [text]="OpenWB_Garage_rechts:Batterieleistung_gesamt"></ftui-label><span class="u">W</span></span></div>
+    <div class="kv"><span class="k">SOC gewichtet</span><span class="v"><ftui-label
+      [text]="di_DashWerte:SOC_gew"></ftui-label><span class="u">%</span></span></div>
+    <div class="kv"><span class="k">Wallbox L / R</span><span class="v"><ftui-label
+      [text]="OpenWB_Garage_links:Ladeleistung_gesamt_kW"></ftui-label>/<ftui-label
+      [text]="OpenWB_Garage_rechts:Ladeleistung_gesamt_kW"></ftui-label><span class="u">kW</span></span></div>
+    <div class="kv"><span class="k">Wärmepumpe</span><span class="v"><ftui-label
+      [text]="HA_SDM630M_Heatpump:Power_Sum__W1"></ftui-label><span class="u">W</span></span></div>
+  </div>
+
+</div>
+
+<div class="grid2">
+
+  <div class="card pv">
+    <h3>Ertrag<small>GoodWe DC + Deye</small></h3>
+    <div class="stats">
+      <div class="st"><div class="l">PV heute</div><div class="v c-pv"><ftui-label
+        [text]="myShelly_Technikraum_Deye_PM_L1:PV_Gesamt_kWh_day"></ftui-label><small>kWh</small></div></div>
+      <div class="st"><div class="l">PV Monat</div><div class="v"><ftui-label
+        [text]="myShelly_Technikraum_Deye_PM_L1:PV_Gesamt_kWh_month"></ftui-label><small>kWh</small></div></div>
+      <div class="st"><div class="l">PV Jahr</div><div class="v"><ftui-label
+        [text]="myShelly_Technikraum_Deye_PM_L1:PV_Gesamt_kWh_year"></ftui-label><small>kWh</small></div></div>
+    </div>
+    <div class="stats" style="margin-top:8px">
+      <div class="st"><div class="l">Einsp. heute</div><div class="v c-gr"><ftui-label
+        [text]="HA_SDM630M_Nergie:statSald_Einspeiseenergie_kWhDay"></ftui-label><small>kWh</small></div></div>
+      <div class="st"><div class="l">Bezug heute</div><div class="v c-bez"><ftui-label
+        [text]="HA_SDM630M_Nergie:statSald_Bezugsenergie_kWhDay"></ftui-label><small>kWh</small></div></div>
+      <div class="st"><div class="l">Zähler AC heute</div><div class="v"><ftui-label
+        [text]="HA_SDM630M_PV_Erzeugung:Erz_PV_Energie_kWh_day"></ftui-label><small>kWh</small></div></div>
+    </div>
+  </div>
+
+  <div class="card bat">
+    <h3>Jahresbilanz<small>Soll 26.500 kWh/a</small></h3>
+    <div class="sub">Erzeugung</div>
+    <div class="stats s6">
+      <div class="st"><div class="l">Ist YTD</div><div class="v c-pv"><ftui-label
+        [text]="di_PV_Jahresbilanz:ist_kwh_erz_PV_Energie_akt_Jahr"></ftui-label><small>kWh</small></div></div>
+      <div class="st"><div class="l">Soll bis heute</div><div class="v"><ftui-label
+        [text]="di_PV_Jahresbilanz:soll_bis_heute_kwh_theor_erz_PV_E_bei_26500pa"></ftui-label><small>kWh</small></div></div>
+      <div class="st"><div class="l">Performance</div><div class="v"><ftui-label
+        [text]="di_PV_Jahresbilanz:performance_prozent_erz_E_bez_auf_26500kWh"></ftui-label><small>%</small></div></div>
+      <div class="st"><div class="l">% Jahressoll</div><div class="v"><ftui-label
+        [text]="di_PV_Jahresbilanz:ist_prozent_jahressoll_bez_auf_26500kWh"></ftui-label><small>%</small></div></div>
+      <div class="st"><div class="l">Hochrechnung</div><div class="v"><ftui-label
+        [text]="di_PV_Jahresbilanz:hochrechnung_jahr_kwh_max_Gesamt_PV_E_bis_JE"></ftui-label><small>kWh</small></div></div>
+      <div class="st"><div class="l">Rest bis Soll</div><div class="v"><ftui-label
+        [text]="di_PV_Jahresbilanz:rest_soll_kwh_bis_JE_bis_26500"></ftui-label><small>kWh</small></div></div>
+    </div>
+    <div class="sub">Einspeisung</div>
+    <div class="stats s6">
+      <div class="st"><div class="l">Ist YTD</div><div class="v c-gr"><ftui-label
+        [text]="di_PV_Jahresbilanz:einsp_ist_kwh"></ftui-label><small>kWh</small></div></div>
+      <div class="st"><div class="l">Soll bis heute</div><div class="v"><ftui-label
+        [text]="di_PV_Jahresbilanz:einsp_soll_bis_heute_kwh"></ftui-label><small>kWh</small></div></div>
+      <div class="st"><div class="l">Jahressoll</div><div class="v"><ftui-label
+        [text]="di_PV_Jahresbilanz:einsp_prozent_jahressoll"></ftui-label><small>%</small></div></div>
+      <div class="st"><div class="l">Hochrechnung</div><div class="v"><ftui-label
+        [text]="di_PV_Jahresbilanz:einsp_hochrechnung_jahr_kwh"></ftui-label><small>kWh</small></div></div>
+      <div class="st"><div class="l">Abweichung</div><div class="v"><ftui-label
+        [text]="di_PV_Jahresbilanz:einsp_abweichung_kwh"></ftui-label><small>kWh</small></div></div>
+      <div class="st"><div class="l">Ausgleich am</div><div class="v" style="font-size:20px"><ftui-label
+        [text]="di_PV_Jahresbilanz:einsp_ausgleich_datum"></ftui-label></div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="card gr chart">
+  <h3>Tagesverlauf<small>PV · Einspeisung · Bezug · Wärmepumpe</small></h3>
+  <ftui-chart type="line" unit="day" height="580" y-min="0" y-label="W">
+    <ftui-chart-data log="FileLog_PVChart" spec="4:du_PVChart.PV"
+      label="PV" point-radius="0" tension="0.35" border-width="2"
+      border-color="#ffb300" fill background-color="rgba(255,179,0,0.20)">
+    </ftui-chart-data>
+    <ftui-chart-data log="FileLog_PVChart" spec="4:du_PVChart.Einsp"
+      label="Einspeisung" point-radius="0" tension="0.35" border-width="2"
+      border-color="#4ade80" fill background-color="rgba(74,222,128,0.15)">
+    </ftui-chart-data>
+    <ftui-chart-data log="FileLog_PVChart" spec="4:du_PVChart.Bezug"
+      label="Bezug" point-radius="0" tension="0.35" border-width="2"
+      border-color="#ff3b4f">
+    </ftui-chart-data>
+    <ftui-chart-data log="FileLog_PVChart" spec="4:du_PVChart.WP"
+      label="Wärmepumpe" point-radius="0" tension="0.35" border-width="1.5"
+      border-color="#b388ff">
+    </ftui-chart-data>
+  </ftui-chart>
+</div>
+
+</div>
+
+<script>
+function startClock(){
+  var c=document.getElementById('clock');
+  function t(){var d=new Date();
+    c.textContent=('0'+d.getHours()).slice(-2)+':'+
+      ('0'+d.getMinutes()).slice(-2);}
+  t();setInterval(t,10000);
+}
+function initNav(){
+  var b=document.getElementById('burger');
+  var n=document.getElementById('sidenav');
+  var s=document.getElementById('navshade');
+  function t(){n.classList.toggle('open');s.classList.toggle('open');}
+  b.addEventListener('click',t);s.addEventListener('click',t);
+}
+window.addEventListener('load',function(){
+  initNav();startClock();
+  setTimeout(function(){
+    document.dispatchEvent(new Event('ftuiVisibilityChanged'));
+  },2000);
+});
+</script>
+</body>
+</html>

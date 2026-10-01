@@ -1,0 +1,5 @@
+{
+  "requirements": [
+    "greeclimate==1.4.1"
+  ]
+}

@@ -1,0 +1,322 @@
+import { backendService } from './backend.service.js';
+import { FtuiBinding } from './ftui.binding.js';
+import { vNotify } from '../vanilla-notify/vanilla-notify.min.js';
+import * as ftui from './ftui.helper.js';
+
+
+class FtuiApp {
+  constructor() {
+    this.version = '3.3.0';
+    this.config = {
+      enableDebug: false,
+      fhemDir: '',
+      debugLevel: 0,
+      lang: 'de',
+      refreshDelay: 0,
+      toastPosition: 'bottomLeft',
+      toastDuration: 5,
+      styleList: [
+        'modules/vanilla-notify/vanilla-notify.css',
+      ],
+    };
+    this.states = {
+      lastSetOnline: 0,
+      isOffline: false,
+    };
+
+    // Debounced refresh used when content sub-areas finish loading.
+    // Collapses multiple parallel content loads into a single backend request.
+    this._debouncedRefresh = ftui.debounce(function () {
+      backendService.forceRefresh();
+    }, this);
+
+    this.loadStyles();
+
+    this.log = ftui.log;
+  }
+
+  async init() {
+
+    // read meta and build common config first
+    this.config.meta = document.getElementsByTagName('META');
+    this.config.refreshFilter = this.getMetaString('refresh_filter');
+    this.config.updateFilter = this.getMetaString('update_filter');
+
+    this.config.debugLevel = this.getMetaNumber('debug', 0);
+    this.config.updateCheckInterval = this.getMetaNumber('update_check_interval', 5);
+    this.config.enableDebug = (this.config.debugLevel > 0);
+    this.config.enableToast = this.getMetaNumber('toast', 5); // 1,2,3...= n Toast-Messages, 0: No Toast-Messages
+    this.config.toastDuration = this.getMetaString('toast_duration', 5);
+    this.config.toastPosition = this.getMetaString('toast_position', this.config.toastPosition);
+    this.config.refreshInterval = this.getMetaNumber('refresh_interval', 15 * 60); // 15 minutes
+    this.config.refreshDelay = this.getMetaString('refresh_restart_delay', 3);
+    // self path
+    const fhemUrl = this.getMetaString('fhemweb_url');
+    if (fhemUrl) {
+      this.config.fhemDir = new RegExp('^((?!http://|https://).)*$').test(fhemUrl)
+        ? window.location.origin + '/' + fhemUrl + '/'
+        : fhemUrl;
+    } else {
+      this.config.fhemDir = window.location.origin + '/' + location.pathname.split('/')[1] + '/';
+    }
+    this.config.fhemDir = this.config.fhemDir.replace('///', '//');
+    ftui.log(1, 'FHEM dir: ' + this.config.fhemDir);
+    // lang
+    const userLang = navigator.language || navigator.userLanguage;
+    this.config.lang = this.getMetaString('lang', ((ftui.isDefined(userLang)) ? userLang.split('-')[0] : 'de'));
+    // credentials
+    this.config.username = this.getMetaString('username');
+    this.config.password = this.getMetaString('password');
+
+    // initialize backend service
+    await this.initBackends();
+  }
+
+  async initPage() {
+    window.performance.mark('start initPage');
+
+    this.states.startTime = new Date();
+    ftui.log(2, '[ftuiApp] initPage');
+    await this.initComponents(document).catch(error => {
+      ftui.error('[ftuiApp] error: initComponents - ' + error);
+    });
+    const event = new CustomEvent('ftuiPageInitialized');
+    document.dispatchEvent(event);
+    window.performance.mark('end initPage');
+    window.performance.measure('initPage', 'start initPage', 'end initPage');
+    const dur = 'initPage done after ' + (new Date() - this.states.startTime) + 'ms';
+    if (this.config.debugLevel > 1) this.toast(dur);
+    ftui.log(1, '[ftuiApp] ' + dur);
+
+    this.setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.body.classList.remove('loading');
+  }
+
+  // initialize backend services
+  async initBackends() {
+    try {
+      // Initialize backend service
+      backendService.setConfig(this.config);
+      backendService.debugEvents.subscribe(text => this.toast(text));
+      backendService.errorEvents.subscribe(text => this.toast(text, 'error'));
+
+      // Kick off CSRF handshake in the background now that fhemDir is known,
+      // so the first jsonlist2 request does not have to wait for it.
+      backendService.prefetchConnections();
+
+      await this.initPage();
+
+      // call health check periodically
+      setInterval(() => {
+        this.checkConnection();
+      }, this.config.updateCheckInterval * 60 * 1000);
+    } catch (err) {
+      ftui.error('[ftuiApp] initBackends error - ' + err);
+    }
+  }
+
+  async initComponents(area) {
+    ftui.log(2, '[ftuiApp] initComponents for area: ', area);
+    const newComponents = this.loadUndefinedComponents(area);
+    await ftui.timeoutPromise(newComponents).catch(error => {
+      ftui.error('[ftuiApp] error: initComponents - ' + error);
+    });
+    this.startBinding(area);
+    ftui.log(1, '[ftuiApp] initComponents - Done');
+  }
+
+  async loadModule(path) {
+    try {
+      await import(path);
+    } catch (error) {
+      ftui.error('Failed to load ' + path + ' ' + error);
+    }
+  }
+
+  loadUndefinedComponents(area) {
+    const componentTypes = [];
+    const undefinedComponents = ftui.selectElements(':not(:defined)', area);
+
+    if (undefinedComponents === null) {
+      // nothing found, return self resolving Promise array
+      return [new Promise((resolve) => {
+        const id = setTimeout(() => {
+          clearTimeout(id);
+          resolve('nothing found')
+        }, 10)
+      })];
+    }
+
+    // Fetch all the children of <ftui-*> that are not defined yet.
+    undefinedComponents.forEach(elem => {
+      if (elem.localName.startsWith('ftui-') && !componentTypes.includes(elem.localName)) {
+        componentTypes.push(elem.localName);
+      }
+    });
+
+    if (componentTypes.length === 0) {
+      // no ftui-* elements found, return self resolving Promise array
+      return [new Promise((resolve) => {
+        const id = setTimeout(() => {
+          clearTimeout(id);
+          resolve('nothing to do')
+        }, 10)
+      })];
+    }
+
+    componentTypes.forEach(type => {
+      const nameParts = type.split('-');
+      const group = nameParts[1];
+      const name = nameParts[2] ? nameParts[1] + '-' + nameParts[2] : nameParts[1];
+      this.loadModule(`../../components/${group}/${name}.component.js`)
+    });
+
+    const promises = [...undefinedComponents].map(component => {
+      return customElements.whenDefined(component.localName);
+    });
+
+    return promises;
+  }
+
+  startBinding(area) {
+    // init ftui binding of 3rd party components
+    const selectors = ['[ftui-binding]'];
+    const bindElements = ftui.selectElements(selectors.join(', '), area);
+
+    if (bindElements === null) {
+      return;
+    }
+
+    bindElements.forEach((element) => {
+      element.isActiveChange = {};
+      element.binding = new FtuiBinding(element);
+      element.binding.isThirdPartyElement = true;
+    });
+
+    backendService.createFilterParameter();
+
+    const event = new CustomEvent('ftuiComponentsAdded', { detail: area });
+    document.dispatchEvent(event);
+
+    // For the top-level page init start the normal delayed refresh cycle.
+    // For content sub-areas use a short debounced refresh instead: this prevents
+    // 10+ parallel content loads from each resetting the startup timer, which
+    // was delaying the first FHEM data fetch by the full load time of all content.
+    if (area === document) {
+      backendService.startRefreshInterval(this.config.refreshDelay + 20);
+    } else {
+      // 300 ms debounce: fires once after the last content area finishes loading
+      this._debouncedRefresh(300);
+    }
+
+    // trigger refreshes
+    ftui.triggerEvent('changedSelection');
+  }
+
+  attachBinding(element) {
+    element.binding = new FtuiBinding(element);
+  }
+
+  // return an observable/subject for a reading routed to the correct backend
+  getBackendEvents(reading) {
+    if (!reading) {
+      return { subscribe: () => { }, unsubscribe: () => { } };
+    }
+    return backendService.getBackendEvents(reading);
+  }
+
+  loadStyles() {
+    this.config.styleList.forEach(link => ftui.appendStyleLink(link));
+  }
+
+  checkOnlineStatus() {
+    ftui.log(2, 'online offline');
+    if (navigator.onLine) { this.setOnline(); } else { this.setOffline(); }
+  }
+
+  setOnline() {
+    const now = Date.now() / 1000;
+    ftui.log(2, 'setOnline', now, this.states.lastSetOnline);
+    if ((now - this.states.lastSetOnline) > 3) {
+      this.states.lastSetOnline = now;
+      this.states.isOffline = false;
+      backendService.forceRefresh();
+      ftui.log(1, 'FTUI is online');
+    }
+  }
+
+  setOffline() {
+    this.states.isOffline = true;
+    backendService.setOffline();
+    ftui.log(1, 'FTUI is offline');
+  }
+
+  checkConnection() {
+    backendService.checkConnection();
+  }
+
+  updateReadingItem(parameterId, newData) {
+    backendService.updateReadingItem(parameterId, newData);
+  }
+
+  getStates() {
+    return backendService.states;
+  }
+
+  lastEventTimestamp() {
+    return backendService.lastEventTimestamp();
+  }
+
+  getMetaNumber(key, defaultVal) {
+    return Number.parseInt(this.getMetaString(key, defaultVal));
+  }
+
+  getMetaString(name, defaultVal) {
+    if (this.config.meta[name]) {
+      return this.config.meta[name].content;
+    }
+    return defaultVal;
+  }
+
+  setTheme(isDark) {
+    const now = ftui.dateFormat(new Date(), 'YYYY-MM-DD hh:mm:ss');
+    backendService.updateReadingItem('ftui-isDark', {
+      id: 'ftui-isDark',
+      invalid: false,
+      value: isDark,
+      time: now,
+      update: now,
+    });
+  }
+
+  toast(text, level = 'debug') {
+    // https://github.com/MLaritz/Vanilla-Notify
+
+    if (this.config.enableToast !== 0 && window.vNotify) {
+      if (level === 'error') {
+        return vNotify.error({
+          text: text,
+          visibleDuration: 20000, // in milliseconds
+          position: this.config.toastPosition,
+        });
+      } else if (level === 'info') {
+        return vNotify.info({
+          text: text,
+          visibleDuration: 5000, // in milliseconds
+          position: this.config.toastPosition,
+        });
+      }
+      else {
+        return vNotify.notify({
+          text: text,
+          visibleDuration: this.config.toastDuration * 1000 || 5000,
+          position: this.config.toastPosition,
+        });
+      }
+    }
+  }
+
+}
+
+// instance singleton here
+export const ftuiApp = new FtuiApp();

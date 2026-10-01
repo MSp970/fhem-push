@@ -1,0 +1,19 @@
+# Created for FileLog_Proz_Energie_Allg - PV/Batterie/EVU-Anteil % pro Monat (energiebasiert, Allg)
+set terminal png transparent size <SIZE> crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'Allgemein: PV / Batterie / EVU-Anteil - Monatswerte (%, energiebasiert)'
+set ytics
+set grid
+set ylabel "%"
+set yrange [0:100]
+
+#FileLog_Proz_Energie_Allg 4:Proz_Energie_Allg_PV_Monat:0:
+#FileLog_Proz_Energie_Allg 4:Proz_Energie_Allg_Batt_Monat:0:
+#FileLog_Proz_Energie_Allg 4:Proz_Energie_Allg_EVU_Monat:0:
+
+plot "<IN>" using 1:2 axes x1y1 title 'PV %' ls l0 lw 2 with lines,\
+"<IN>" using 1:2 axes x1y1 title 'Batterie %' ls l1 lw 2 with lines,\
+"<IN>" using 1:2 axes x1y1 title 'EVU %' ls l2 lw 2 with lines

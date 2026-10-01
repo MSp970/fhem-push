@@ -1,0 +1,5 @@
+aiohttp~=3.9.1
+async-timeout<5.0,>=3.0
+defusedxml>=0.6.0
+python-didl-lite~=1.4.0
+voluptuous>=0.12.1

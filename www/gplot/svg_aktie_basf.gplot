@@ -1,0 +1,20 @@
+# Created by FHEM/98_SVG.pm, 2026-07-09 09:55:19
+set terminal png transparent size <SIZE> crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'BASF SE'
+set ytics 
+set y2tics 
+set grid ytics
+set ylabel "EUR"
+set y2label ""
+
+#FileLog_Aktien 4:Aktie_DE000BASF111.last\x3a::
+#FileLog_Aktien 4:Aktie_DE000BASF111.bid\x3a::
+#FileLog_Aktien 4:Aktie_DE000BASF111.ask\x3a::
+
+plot "<IN>" using 1:2 axes x1y1 title 'Last' ls l0 lw 2 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'Bid' ls l1 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'Ask' ls l2 lw 1 with lines

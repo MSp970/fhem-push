@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes"/>
+<title>Energie</title>
+<script src="../ftui.js"></script>
+<link href="../ftui.css" rel="stylesheet"/>
+<link href="../themes/ftui-theme.css" rel="stylesheet"/>
+
+<style>
+:root{
+  --bg:#0b0f1a; --card:#121826; --card2:#1a1f2e;
+  --line:#1d2638; --txt:#e0e0e0; --dim:#8496ab;
+  --cyan:#00ffff; --pv:#ffb300; --haus:#2196f3;
+  --bat:#4caf50;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);
+  color:var(--txt);font-family:"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased}
+body{min-height:100vh;padding:0 0 30px}
+
+/* ---------- Header ---------- */
+.topbar{display:flex;align-items:center;gap:4px;
+  padding:10px 16px;background:#0a0e18;
+  border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:5}
+.topbar .tab{padding:8px 14px;color:var(--dim);
+  font-weight:600;font-size:15px;text-decoration:none;
+  border-bottom:2px solid transparent}
+.topbar .tab.active{color:var(--txt);
+  border-color:var(--cyan)}
+.topbar .spacer{flex:1}
+.topbar .auto{display:flex;align-items:center;gap:6px;
+  color:var(--bat);font-weight:700;font-size:14px}
+
+/* ---------- Kreise ---------- */
+.circle-row{display:flex;justify-content:space-around;
+  align-items:flex-start;flex-wrap:wrap;gap:20px;
+  margin-top:26px;padding:0 12px}
+.circle-card{position:relative;width:200px;height:200px;
+  border-radius:50%;padding:20px;text-align:center;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;
+  background:radial-gradient(circle at center,
+    var(--card2) 0%,var(--bg) 100%);
+  box-shadow:0 0 20px rgba(0,255,255,.3)}
+.circle-card.haus{margin-top:60px}
+.circle-card h3{margin:0 0 4px;font-size:14px;
+  font-weight:700;color:var(--cyan);
+  text-transform:uppercase;letter-spacing:1px}
+.circle-card .ico{font-size:38px;line-height:1}
+.circle-card .val{font-size:34px;font-weight:800;
+  letter-spacing:-1px}
+.circle-card .val small{font-size:17px;font-weight:600;
+  color:var(--dim)}
+.circle-card .sub{font-size:12px;color:var(--dim)}
+.circle-card.pv{border:2px solid var(--pv);
+  box-shadow:0 0 20px rgba(255,179,0,.35)}
+.circle-card.pv .ico{filter:drop-shadow(0 0 8px var(--pv))}
+.circle-card.haus{border:2px solid var(--haus);
+  box-shadow:0 0 20px rgba(33,150,243,.35)}
+.circle-card.haus .ico{
+  filter:drop-shadow(0 0 8px var(--haus))}
+.circle-card.bat{border:2px solid #12324a}
+.circle-card.bat .ico{
+  filter:drop-shadow(0 0 8px var(--bat))}
+.circle-card.bat .arc{position:absolute;inset:-2px;
+  border-radius:50%;
+  background:conic-gradient(from -90deg,
+    var(--bat) calc(var(--soc,0)*1%),
+    var(--cyan) calc(var(--soc,0)*1%),
+    var(--cyan) calc(var(--soc,0)*1% + 4%),
+    transparent 0);
+  -webkit-mask:radial-gradient(farthest-side,
+    transparent calc(100% - 7px),
+    #000 calc(100% - 6px));
+  mask:radial-gradient(farthest-side,
+    transparent calc(100% - 7px),
+    #000 calc(100% - 6px))}
+
+/* Flusspfeile */
+.wirebox{position:relative;max-width:960px;margin:0 auto}
+.wires{position:absolute;inset:0;width:100%;height:300px;
+  pointer-events:none;z-index:-1}
+.wires path{fill:none;stroke-width:3;
+  stroke-linecap:round;stroke-dasharray:10 14;
+  animation:dash 1.2s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-24}}
+@media (prefers-reduced-motion:reduce){
+  .wires path{animation:none}}
+.w-pv{stroke:var(--pv);
+  filter:drop-shadow(0 0 4px var(--pv))}
+.w-bat{stroke:var(--cyan);
+  filter:drop-shadow(0 0 4px var(--cyan))}
+
+/* ---------- Karten ---------- */
+.wide-card{margin:30px auto;width:90%;max-width:960px;
+  background:var(--card);border-radius:12px;
+  box-shadow:0 0 15px rgba(0,255,255,.2);
+  padding:20px}
+.wide-card h2{margin:0 0 12px;font-size:16px;
+  font-weight:700;color:var(--cyan)}
+.stats-row{display:flex;justify-content:space-around;
+  flex-wrap:wrap;gap:12px;margin-top:8px}
+.stat{background:var(--card2);border-radius:8px;
+  padding:10px 20px;min-width:180px;flex:1;
+  box-shadow:0 0 10px rgba(255,255,255,.1);
+  display:flex;align-items:center;gap:10px}
+.stat .si{font-size:20px}
+.stat .sl{flex:1;color:var(--dim);font-size:14px}
+.stat .sv{font-size:20px;font-weight:800}
+.stat .sv small{font-size:12px;font-weight:600;
+  color:var(--dim)}
+@media (max-width:760px){
+  .circle-card.haus{margin-top:0}
+  .stat{min-width:140px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="tab active" href="#">Übersicht</a>
+  <a class="tab" href="pv.html">Energie</a>
+  <a class="tab" href="klima.html">Klima</a>
+  <a class="tab" href="geraete.html">Geräte</a>
+  <div class="spacer"></div>
+  <div class="auto">⚡ Auto
+    <ftui-label [text]="di_DashWerte:SOC_gew"></ftui-label>%
+  </div>
+</div>
+
+<div class="wirebox">
+  <svg class="wires" viewBox="0 0 960 300"
+    preserveAspectRatio="none">
+    <path class="w-pv"
+      d="M 250 130 C 330 140, 350 190, 400 210"/>
+    <path class="w-bat"
+      d="M 560 210 C 610 190, 630 140, 710 130"/>
+  </svg>
+
+  <div class="circle-row">
+    <div class="circle-card pv">
+      <h3>PV</h3>
+      <div class="ico">🔆</div>
+      <div class="val">
+        <ftui-label [text]="di_DashWerte:PV_gesamt">
+        </ftui-label> <small>W</small>
+      </div>
+      <div class="sub">gesamt</div>
+    </div>
+
+    <div class="circle-card haus">
+      <h3>Haus</h3>
+      <div class="ico">🏠</div>
+      <div class="val">
+        <ftui-label
+[text]="HA_SDM630M_Nergie:Summe_Leistungsbezug_Haus_gesamt">
+        </ftui-label> <small>W</small>
+      </div>
+      <div class="sub">Verbrauch</div>
+    </div>
+
+    <div class="circle-card bat">
+      <div class="arc" id="socarc"></div>
+      <h3>Batterie</h3>
+      <div class="ico">🔋</div>
+      <div class="val">
+        <ftui-label id="socval"
+          [text]="di_DashWerte:SOC_gew">
+        </ftui-label> <small>%</small>
+      </div>
+      <div class="sub">Ladeleistung:
+        <ftui-label [text]="di_DashWerte:Bat_Leistung">
+        </ftui-label> W
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wide-card">
+  <h2>▸ Tagesverlauf</h2>
+  <div class="stats-row">
+    <div class="stat">
+      <div class="si">🔆</div>
+      <div class="sl">Erzeugung</div>
+      <div class="sv"><ftui-label
+[text]="HA_SDM630M_PV_Erzeugung:Erz_PV_Energie_kWh_day">
+        </ftui-label> <small>kWh</small></div>
+    </div>
+    <div class="stat">
+      <div class="si">🏠</div>
+      <div class="sl">Verbrauch</div>
+      <div class="sv"><ftui-label
+        [text]="di_DashWerte:Verbrauch_heute">
+        </ftui-label> <small>kWh</small></div>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat">
+      <div class="si">↗️</div>
+      <div class="sl">Einspeisung</div>
+      <div class="sv"><ftui-label
+[text]="HA_SDM630M_Nergie:statSald_Einspeiseenergie_kWhDay">
+        </ftui-label> <small>kWh</small></div>
+    </div>
+    <div class="stat">
+      <div class="si">↘️</div>
+      <div class="sl">Bezug</div>
+      <div class="sv"><ftui-label
+[text]="HA_SDM630M_Nergie:statSald_Bezugsenergie_kWhDay">
+        </ftui-label> <small>kWh</small></div>
+    </div>
+  </div>
+</div>
+
+<div class="wide-card">
+  <h2>Tagesdiagramm</h2>
+  <ftui-chart type="line" unit="day" height="260"
+    y-min="0" y-label="W">
+    <ftui-chart-data
+      log="FileLog_Elektrische_Wirkleistungen_Haus_PV_WP"
+      spec="4:HA_SDM630M_PV_Erzeugung.Power_Sum__W1"
+      label="PV" fill point-radius="0" tension="0.3"
+      border-color="#ffb300"
+      background-color="rgba(255,179,0,0.25)">
+    </ftui-chart-data>
+    <ftui-chart-data
+      log="FileLog_Elektrische_Wirkleistungen_Haus_PV_WP"
+      spec="4:HA_SDM630M_Allgemein.Power_Sum__W1"
+      label="Haus" fill point-radius="0" tension="0.3"
+      border-color="#2196f3"
+      background-color="rgba(33,150,243,0.25)">
+    </ftui-chart-data>
+  </ftui-chart>
+</div>
+
+<script>
+window.addEventListener('load', function(){
+  var lbl = document.getElementById('socval');
+  var arc = document.getElementById('socarc');
+  function upd(){
+    var v = parseFloat(lbl.textContent);
+    if (!isNaN(v)) arc.style.setProperty('--soc', v);
+  }
+  new MutationObserver(upd)
+    .observe(lbl,
+      {childList:true, subtree:true, characterData:true});
+  setInterval(upd, 5000);
+  upd();
+  setTimeout(function(){
+    document.dispatchEvent(
+      new Event('ftuiVisibilityChanged'));
+  }, 2000);
+});
+</script>
+
+<script src="ue-arrange.js?v=13"></script>
+</body>
+</html>

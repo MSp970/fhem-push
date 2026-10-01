@@ -1,0 +1,95 @@
+# Created by FHEM/98_SVG.pm, 2023-12-06 06:33:36
+2
+set terminal png transparent size <SIZE> crop
+3
+set output '<OUT>.png'
+4
+set xdata time
+5
+set timefmt "%Y-%m-%d_%H:%M:%S"
+6
+set xlabel " "
+7
+set title '<TL>'
+8
+set ytics 
+9
+set y2tics 
+10
+set grid
+11
+set ylabel "Humidity"
+12
+set y2label "Temperature"
+13
+set yrange [-1:9]
+14
+set y2range [0:60]
+15
+?
+16
+#FileLog_THZ 4:Mythz.Verdichter_sGlobal\x3a::
+17
+#FileLog_THZ 4:Mythz.Pumpe_Heizkreis_sGlobal\x3a::$fld[3]+1
+18
+#FileLog_THZ 4:WP_HK_Pumpe_Freigabe.setG1\x3a::$fld[3]=~"Ein"?3:2
+19
+#FileLog_THZ 4:Mythz.Pumpe_Brauchwasser_sGlobal\x3a::$fld[3]+3
+20
+#FileLog_THZ 4:Mythz.Pumpe_Solar_sGlobal\x3a::$fld[3]+4
+21
+#FileLog_THZ 4:Mythz.Ofen_Aktiv_sGlobal\x3a::$fld[3]+5
+22
+#FileLog_THZ 4:Mythz.Aktive_Einschalthysterese_sHC1\x3a::
+23
+#FileLog_THZ 3:myShelly_PM1_Heatpump_Control.relay\x3a::$fld[3]=~"on"?1:0
+24
+#FileLog_THZ 4:Mythz.Blockierzeit_Heizen_sDHW\x3a::$fld[3]/1000
+25
+#FileLog_THZ 4:Mythz.Delta_Integral_Reserve\x3a::$fld[3]/10
+26
+#FileLog_THZ 4:Mythz.Heizanforderung_sControl\x3a::
+27
+#FileLog_THZ 4:Mythz.Heizkreisstufe_sControl\x3a::
+28
+#FileLog_THZ 4:Mythz.Integralanteil_Heizen_sHC1\x3a::$fld[3]/10+10
+29
+#FileLog_THZ 4:Mythz.Vorlauftemperatur_sHC1\x3a::
+30
+#FileLog_THZ 4:Mythz.Brauchwassertemperatur_sDHW\x3a::
+31
+#FileLog_THZ 4:Mythz.Delta_Soll_Ist_Temp\x3a::
+32
+?
+33
+plot "<IN>" using 1:2 axes x1y1 title 'Verdichter 01' ls l0 lw 1 with steps,\
+34
+     "<IN>" using 1:2 axes x1y1 title 'HK Pumpe 12' ls l1 lw 1 with steps,\
+35
+     "<IN>" using 1:2 axes x1y1 title 'HK Pumpe Freigabe 23' ls l2 lw 1 with steps,\
+36
+     "<IN>" using 1:2 axes x1y1 title 'BW Pumpe 34' ls l3 lw 1 with steps,\
+37
+     "<IN>" using 1:2 axes x1y1 title 'Solarpumpe 45' ls l4 lw 1 with steps,\
+38
+     "<IN>" using 1:2 axes x1y1 title 'Ofen aktiv Vsperre 56' ls l5 lw 1 with steps,\
+39
+     "<IN>" using 1:2 axes x1y1 title 'Hys Ein' ls l6 lw 1 with steps,\
+40
+     "<IN>" using 1:2 axes x1y1 title 'WP-Steuerung Shelly 01' ls l7 lw 1 with steps,\
+41
+     "<IN>" using 1:2 axes x1y1 title 'Blockierzeit Heizen *1000' ls l0 lw 1 with lines,\
+42
+     "<IN>" using 1:2 axes x1y1 title 'Delta Integral Reserve *10' ls l1 lw 1 with lines,\
+43
+     "<IN>" using 1:2 axes x1y1 title 'Heizanforderung' ls l2 lw 1 with lines,\
+44
+     "<IN>" using 1:2 axes x1y1 title 'Heizkreisstufe' ls l3 lw 1 with lines,\
+45
+     "<IN>" using 1:2 axes x1y1 title 'Heizintegral *10+10' ls l4 lw 1 with lines,\
+46
+     "<IN>" using 1:2 axes x1y2 title 'HK Vorlauf' ls l5 lw 1 with lines,\
+47
+     "<IN>" using 1:2 axes x1y2 title 'BW temp' ls l6 lw 1 with lines,\
+48
+     "<IN>" using 1:2 axes x1y2 title 'Delta Soll Ist HK' ls l7 lw 1 with lines

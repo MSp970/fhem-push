@@ -1,0 +1,28 @@
+# Created by FHEM/98_SVG.pm, 2025-10-14 06:43:52
+set terminal png transparent size <SIZE> crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'Elektrische WIrkleistungen'
+set ytics 
+set y2tics 
+set grid ytics y2tics
+set ylabel "Watt"
+set y2label "Watt"
+set yrange [-1000:20000]
+set y2range [-1000:20000]
+
+#FileLog_Elektrische_Wirkleistungen_Haus_PV_WP 4:HA_SDM630M_Wohnung_EG.Power_Sum__W1\x3a::
+#FileLog_Elektrische_Wirkleistungen_Haus_PV_WP 4:HA_SDM630M_PV_Erzeugung.Power_Sum__W1\x3a::
+#FileLog_Elektrische_Wirkleistungen_Haus_PV_WP 4:HA_SDM630M_Nergie.Power_Sum__W1\x3a::
+#FileLog_Elektrische_Wirkleistungen_Haus_PV_WP 4:HA_SDM630M_Heatpump.Power_Sum__W1\x3a::
+#FileLog_Elektrische_Wirkleistungen_Haus_PV_WP 4:HA_SDM630M_Wohnung_OG.Power_Sum__W1\x3a::
+#FileLog_Elektrische_Wirkleistungen_Haus_PV_WP 4:HA_SDM630M_Allgemein.Power_Sum__W1\x3a::
+
+plot "<IN>" using 1:2 axes x1y2 title 'W_EG' ls l2 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'PV' ls l1 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'N-Ergie' ls l0 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'WP' ls l3 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'W_OG' ls l4 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Allg' ls l5 lw 1 with lines

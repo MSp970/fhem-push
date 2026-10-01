@@ -1,0 +1,23 @@
+# Created by FHEM
+set terminal png transparent size <SIZE> crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'Wetter Übersicht'
+set ytics
+set y2tics
+set grid ytics
+set ylabel "Temperatur (°C)"
+set y2label "Wind (km/h)"
+
+#FileLog 4:BresserWetter.temperatur_aussen\x3a:0:
+#FileLog 4:BresserWetter.taupunkt\x3a:0:
+#FileLog 4:BresserWetter.windgeschwindigkeit_kmh\x3a:0:
+#FileLog 4:BresserWetter.windboe_kmh\x3a:0:
+
+plot "<IN>" using 1:2 axes x1y1 title 'Temperatur außen (°C)' ls l0 lw 2 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'Taupunkt (°C)' ls l1 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Wind (km/h)' ls l2 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Böe (km/h)' ls l3 lw 1 with lines
+EOF

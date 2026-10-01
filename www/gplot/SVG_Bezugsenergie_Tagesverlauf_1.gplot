@@ -1,0 +1,18 @@
+# Created by FHEM/98_SVG.pm, 2026-08-05 07:42:34
+set terminal png transparent size <SIZE> crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'Bezugsenergie'
+set ytics 
+set y2tics 
+set grid
+set ylabel "Energie Wmin"
+set y2label "Energie Wmin"
+
+#Bezugsenergie_Tagesverlauf 4:HA_SDM630M_Nergie.statSald_Bezugsenergie_WminDay\x3a::
+#Bezugsenergie_Tagesverlauf 4:HA_SDM630M_Nergie.*::
+
+plot "<IN>" using 1:2 axes x1y1 title 'Bezugsenergie' ls l0 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Bezug pro h' ls l0 lw 1 with bars

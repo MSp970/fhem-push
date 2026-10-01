@@ -1,0 +1,15 @@
+ Created by ChatGPT
+
+set terminal png transparent size 1200,500
+set output '<OUT>.png'
+
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set format x "%d.%m"
+
+set grid
+set ylabel "kWh"
+
+plot \
+"< grep 'Tag_Einsp_' <IN>" using 1:4 title 'Einspeisung' with lines lw 2, \
+"< grep 'Tag_Bezug_' <IN>" using 1:4 title 'Bezug' with lines lw 2

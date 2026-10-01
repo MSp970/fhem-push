@@ -1,0 +1,22 @@
+# Created by FHEM/98_SVG.pm, 2025-03-25 11:08:09
+set terminal png transparent size <SIZE> crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'Energie'
+set ytics 
+set y2tics 
+set grid ytics y2tics
+set ylabel "kWh"
+set y2label "kWh"
+
+#FileLog_Elektrische_Energiemengen_Haus_PV_WP 4:HA_SDM630M_Haus.statEnergy_import__kWhDay1\x3a::
+#FileLog_Elektrische_Energiemengen_Haus_PV_WP 4:HA_SDM630M_Nergie.statEnergy_export__kWhDay1\x3a::
+#FileLog_Elektrische_Energiemengen_Haus_PV_WP 4:HA_SDM630M_Nergie.statEnergy_import__kWhDay1\x3a::
+#FileLog_Elektrische_Energiemengen_Haus_PV_WP 4:HA_SDM630M_Heatpump.statEnergy_import__kWhDay1\x3a::
+
+plot "<IN>" using 1:2 axes x1y2 title 'Haus Bezug' ls l0 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'N-Ergie Einsp' ls l1 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'N-Ergie Bezug' ls l2 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'WP Bezug' ls l3 lw 1 with lines

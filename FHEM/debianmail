@@ -1,0 +1,39 @@
+##############################################
+# $Id: myUtilsTemplate.pm 21509 2020-03-25 11:20:51Z rudolfkoenig $
+#
+# Save this file as 99_myUtils.pm, and create your own functions in the new
+# file. They are then available in every Perl expression.
+
+package main;
+ use strict;
+ use warnings;
+ use POSIX;
+ sub
+ myUtils_Initialize($$)
+ {
+   my ($hash) = @_;
+ }
+ 1;
+######## DebianMail  Mail auf dem RPi versenden ############
+sub
+DebianMail
+{
+ my $rcpt = shift;
+ my $subject = shift;
+ my $text = shift;
+ my $attach = shift;
+ my $ret = "";
+ my $sender = "masp\@vodafonemail.de";
+ my $konto = "masp\@vodafonemail.de";
+ my $passwrd = "Laratobi1!";
+ my $provider = "smtp.vodafonemail.de:587";
+ Log 1, "sendEmail RCP: $rcpt";
+ Log 1, "sendEmail Subject: $subject";
+ Log 1, "sendEmail Text: $text";
+#Log 1, "sendEmail Anhang: $attach";;
+ $ret .= qx(sendEmail -f '$sender' -t '$rcpt' -u '$subject' -m '$text' -s '$provider' -xu '$konto' -xp '$passwrd' -o tls=auto -o message-charset=utf-8);
+#$ret .= qx(sendEmail -f '$sender' -t '$rcpt' -u '$subject' -m '$text' -a $attach -s '$provider' -xu '$konto' -xp '$passwrd' -o tls=auto -o message-charset=utf-8);
+ $ret =~ s,[\r\n]*,,g;
+# remove CR from return-string
+ Log 1, "sendEmail returned: $ret";
+}

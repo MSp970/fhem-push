@@ -1,0 +1,30 @@
+# Created by FHEM/98_SVG.pm, 2023-12-01 07:11:45
+set terminal png transparent size &lt;SIZE&gt; crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'Energiewerte'
+set ytics 
+set y2tics 
+set grid
+set ylabel "kWh Monat"
+set y2label "kWh Jahr"
+
+#FileLog_photovoltaik_und_Strom_Monat_Jahr 3:Jahresmenge_Strom_Haus_export.*::
+#FileLog_photovoltaik_und_Strom_Monat_Jahr 3:Monatsmenge_Strom_Haus_export.*::
+#FileLog_photovoltaik_und_Strom_Monat_Jahr 3:Jahresmenge_Strom_Haus_import.*::
+#FileLog_photovoltaik_und_Strom_Monat_Jahr 3:Monatsmenge_Strom_Haus_import.*::
+#FileLog_photovoltaik_und_Strom_Monat_Jahr 3:Jahresmenge_Strom_WP_total.*::
+#FileLog_photovoltaik_und_Strom_Monat_Jahr 3:Monatsmenge_PV_erzeugt.*::
+#FileLog_photovoltaik_und_Strom_Monat_Jahr 3:Jahresmenge_PV_erzeugt.*::
+#FileLog_photovoltaik_und_Strom_Monat_Jahr 3:Monatsmenge_PV_erzeugt.*::
+
+plot "&lt;IN&gt;" using 1:2 axes x1y2 title 'Jahresmenge Rückspeisung' ls l0 lw 2 with lines,\
+     "&lt;IN&gt;" using 1:2 axes x1y1 title 'Monatsmenge Rückspeisung' ls l1 lw 1 with lines,\
+     "&lt;IN&gt;" using 1:2 axes x1y2 title 'Jahresmenge Netzbezug' ls l2 lw 2 with lines,\
+     "&lt;IN&gt;" using 1:2 axes x1y1 title 'Monatsmenge Netzbezug' ls l3 lw 1 with lines,\
+     "&lt;IN&gt;" using 1:2 axes x1y2 title 'Jahresmenge WP' ls l4 lw 2 with lines,\
+     "&lt;IN&gt;" using 1:2 axes x1y1 title 'Monatsmenge WP' ls l5 lw 1 with lines,\
+     "&lt;IN&gt;" using 1:2 axes x1y2 title 'Jahresmenge PV Erzeugung' ls l6 lw 2 with lines,\
+     "&lt;IN&gt;" using 1:2 axes x1y1 title 'Monatsmenge PV Erzeugung' ls l7 lw 1 with lines

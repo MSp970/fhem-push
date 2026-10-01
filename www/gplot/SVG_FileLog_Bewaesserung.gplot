@@ -1,0 +1,29 @@
+# Created by FHEM/98_SVG.pm, 2026-07-20 13:21:25
+set terminal png transparent size <SIZE> crop
+set output '<OUT>.png'
+set xdata time
+set timefmt "%Y-%m-%d_%H:%M:%S"
+set xlabel " "
+set title 'Bewaesserung'
+set ytics 
+set y2tics ON/OFF
+set grid
+set ylabel "soilindex"
+set y2label "ventile"
+set y2range [0:10]
+
+#FileLog_Bewaesserung 4:DOIF_Bewaesserung.SoilIndex_nord\x3a::
+#FileLog_Bewaesserung 4:DOIF_Bewaesserung.SoilIndex_sued\x3a::
+#FileLog_Bewaesserung 4:DOIF_Bewaesserung.SoilIndex_ost\x3a::
+#FileLog_Bewaesserung 4:Bewaesserung_Zone_4_Sued.state_bin\x3a::
+#FileLog_Bewaesserung 4:Bewaesserung_Zone_2_Suedwest.state_bin\x3a::
+#FileLog_Bewaesserung 4:Bewaesserung_Zone_3_Suedost.state_bin\x3a::
+#FileLog_Bewaesserung 4:Bewaesserung_Zone_1_Nord.state_bin\x3a::
+
+plot "<IN>" using 1:2 axes x1y1 title 'Soil Nord' ls l0 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'Soil Sued' ls l1 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y1 title 'Soil Ost' ls l2 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Zone Süd' ls l3 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Zone Südwest' ls l4 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Zone Ost' ls l5 lw 1 with lines,\
+     "<IN>" using 1:2 axes x1y2 title 'Zone Nord' ls l6 lw 1 with lines
