@@ -147,8 +147,16 @@ body{min-height:100vh;background:
 .card h3{white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
 }
 </style>
+<style>
+@media (max-width: 700px) {
+  .headbar { display: none !important; }
+  .main { padding-top: 0 !important; }
+}
+</style>
 </head>
 <body>
+
+<ftui-content file="../components/statusbar-mobile.html"></ftui-content>
 <div class="navshade" id="navshade"></div>
 <nav class="sidenav" id="sidenav">
   <div class="brand">SMART HOME</div>

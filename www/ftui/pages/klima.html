@@ -167,8 +167,16 @@ body{min-height:100vh}
 .minirow .mi .mv small{font-size:12px;color:var(--dim)}
 .minirow .mi .ml{font-size:11px;color:var(--dim)}
 </style>
+<style>
+@media (max-width: 700px) {
+  .headbar { display: none !important; }
+  .main { padding-top: 0 !important; }
+}
+</style>
 </head>
 <body>
+
+<ftui-content file="../components/statusbar-mobile.html"></ftui-content>
 
 <div class="navshade" id="navshade"></div>
 <nav class="sidenav" id="sidenav">

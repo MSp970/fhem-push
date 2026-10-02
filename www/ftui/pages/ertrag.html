@@ -55,8 +55,16 @@ svg.cv{width:100%;height:150px;display:block;margin-top:10px}
 .bars .b em{font-style:normal;font-size:11px;margin-bottom:3px}
 .err{color:var(--rd);font-size:12px}
 </style>
+<style>
+@media (max-width: 700px) {
+  .headbar { display: none !important; }
+  .main { padding-top: 0 !important; }
+}
+</style>
 </head>
 <body>
+
+<ftui-content file="../components/statusbar-mobile.html"></ftui-content>
 <div class="navshade" id="navshade"></div>
 <nav class="sidenav" id="sidenav">
   <div class="brand">SMART HOME</div>

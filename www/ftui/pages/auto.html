@@ -170,8 +170,16 @@ ftui-label{display:inline-block !important;
   width:auto !important}
 .bigval,.minirow .mi .mv,.kv .v{white-space:nowrap}
 </style>
+<style>
+@media (max-width: 700px) {
+  .headbar { display: none !important; }
+  .main { padding-top: 0 !important; }
+}
+</style>
 </head>
 <body>
+
+<ftui-content file="../components/statusbar-mobile.html"></ftui-content>
 
 <div class="navshade" id="navshade"></div>
 <nav class="sidenav" id="sidenav">

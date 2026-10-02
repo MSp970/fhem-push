@@ -102,8 +102,16 @@ body{min-height:100vh;background:
 .hint{font-size:12px;color:var(--dim);margin-top:4px;text-align:right}
 .hero .u ftui-label{display:inline-flex}
 </style>
+<style>
+@media (max-width: 700px) {
+  .headbar { display: none !important; }
+  .main { padding-top: 0 !important; }
+}
+</style>
 </head>
 <body>
+
+<ftui-content file="../components/statusbar-mobile.html"></ftui-content>
 <div class="navshade" id="navshade"></div>
 <nav class="sidenav" id="sidenav">
   <div class="brand">SMART HOME</div>
